@@ -483,8 +483,8 @@
 
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 8px; /* 收起时三组之间的基础间距 */
+    align-items: flex-start;
+    gap: 10px; /* 收起时三组之间的基础间距 */
 }
 
 #captureGroup,
@@ -603,7 +603,6 @@
 } 
 
 /* ---------------- Physics function ---------------- */
-
 #physicsGroup .foldBtn {
     width: auto;           /* 不填满父容器，随内容自适应 */
     height: auto;
@@ -617,10 +616,106 @@
 }
 
 .physicsIcon {
-        width: auto;
-        height: 20px;
+    width: auto;
+    height: 20px;
     object-fit: contain;  /* 保持图标比例 */
     pointer-events: none; /* 点击事件传给按钮 */
+}
+#physicsGroup .groupContent.physicsFlat{
+    display:flex;
+    flex-direction:wrap;
+    align-items:flex-start;
+    gap:0px;
+}
+#physicsGroup .physicsRow{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:auto;
+    gap:6px;
+    width:100%;
+}
+/* 图片自适应，保留比例 */
+#physicsGroup .subBtn img {
+    width: auto;
+    height: 25px;        /* 可自由改为 40px / 60px 等 */
+    max-width: 100%;
+    max-height: 100%;
+    pointer-events: none; /* 点击传给按钮 */
+}
+/* ================= Physics 子按钮图标尺寸 ================= */
+
+/* MAGNET */
+#btnModeMagnet img {
+    width: 65px;
+    height: auto;
+    margin-right: 50px;
+    margin-top: 0;
+}
+
+/* PATH / LOOP */
+#btnShapePath img {
+    width: 40px!important;
+    height: auto!important;
+    margin-right: -1px!important;
+    margin-top: 6px!important;
+}
+ #btnShapeLoop img {
+    width: 40px!important;
+    height: auto!important;
+    margin-right: 25px!important;
+    margin-top: 0!important;
+}
+/* IN / OUT */
+#btnBindIn img {
+    width: 25px!important;
+    height: auto!important;
+    margin-right: 0px!important;
+    margin-top: 0!important;
+}
+#btnBindOut img {
+    width: 25px!important;
+    height: auto!important;
+    margin-right: 2px!important;
+    margin-top: 5px!important;
+}
+
+/* Field Clear */
+#btnMagnetClear img {
+    width: 85px!important;
+    height: auto!important;
+    margin-right: 0px!important;
+    margin-top: 8px!important;
+}
+
+/* Gravity OFF  */
+#btnGravityOff img {
+    width: 85px!important;
+    height: auto!important;
+    margin-right: 0px!important;
+    margin-top: 8px!important;
+}
+
+/* Gravity ON */
+#btnGravityOn img {
+    width: 50px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 0;
+}
+/* Shuffle OFF / ON */
+#btnShuffleOff img, #btnShuffleOn img {
+    width: 50px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 0;
+}
+
+/* M-Blur */
+#btnFxMBlur img {
+    width: 50px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 0;
 }
 /* ---------------- group alineway---------------- */
     .subBtn {
@@ -748,21 +843,70 @@
         </div>
     </div>
 
-    <!-- ================= Physics / Fisk Functions ================= -->
-    <div class="groupFold" id="physicsGroup">
-        <button class="foldBtn">
-            <img src="assets/physics_icon.png" alt="Physics" class="physicsIcon">
-        </button>
-        <div class="groupContent">
-        <button id="btnModeMagnet">MAGNET</button>
-        <button id="btnMagnetShape" class="primary">LOOP</button>
-        <button id="btnMagnetBind"  class="primary">IN</button>
-        <button id="btnMagnetClear">Field Clear</button>
-        <button id="btnGravity" class="primary">Gravity OFF</button>
-        <button id="btnShuffleMode" class="primary">Shuffle OFF</button>
-        <button id="btnFxMBlur" class="primary">M-Blur</button>
-        </div>
+   <!-- ================= Physics / Fisk Functions ================= -->
+<div class="groupFold" id="physicsGroup">
+  <button class="foldBtn">
+    <img src="assets/physics_icon.png" alt="Physics" class="physicsIcon">
+  </button>
+  <div class="groupContent physicsFlat">
+
+    <!-- MAGNET -->
+    <button id="btnModeMagnet" class="subBtn">
+      <img src="assets/magnet.png" alt="MAGNET">
+    </button>
+
+    <!-- PATH / LOOP -->
+    <div class="physicsRow">
+      <button id="btnShapePath" class="subBtn">
+        <img src="assets/path.png" alt="PATH">
+      </button>
+      <button id="btnShapeLoop" class="subBtn active">
+        <img src="assets/loop.png" alt="LOOP">
+      </button>
     </div>
+
+    <!-- IN / OUT -->
+    <div class="physicsRow">
+      <button id="btnBindIn" class="subBtn active">
+        <img src="assets/in.png" alt="IN">
+      </button>
+      <button id="btnBindOut" class="subBtn">
+        <img src="assets/out.png" alt="OUT">
+      </button>
+    </div>
+
+    <!-- Field Clear -->
+    <div class="physicsRow">
+      <button id="btnMagnetClear" class="subBtn">
+        <img src="assets/fieldclear.png" alt="Field Clear">
+      </button>
+    </div>
+
+     <button id="btnGravityOff" class="subBtn active">
+        <img src="assets/gravityoff.png" alt="Gravity OFF">
+      </button>
+
+      <button id="btnGravityOn" class="subBtn">
+        <img src="assets/gravityon.png" alt="Gravity ON">
+      </button>
+
+      <button id="btnShuffleOff" class="subBtn active">
+        <img src="assets/shuffleoff.png" alt="Shuffle OFF">
+      </button>
+
+      <button id="btnShuffleOn" class="subBtn">
+        <img src="assets/shuffleon.png" alt="Shuffle ON">
+      </button>
+
+    <!-- M-Blur -->
+    <div class="physicsRow">
+      <button id="btnFxMBlur" class="subBtn">
+        <img src="assets/mblur.png" alt="M-Blur">
+      </button>
+    </div>
+
+  </div>
+</div>
 
     </div>
     </div>
@@ -1064,6 +1208,8 @@ blurBtn.addEventListener("click", () => {
 
     let fieldDrawing = false;
     let fieldPts = []; // 正在画的点（松手后写入 field.pts）
+    let magnetShape = "loop";   // "loop" | "path"
+    let magnetBind  = "in";     // "in" | "out"
 
     // 预览 canvas（画圈/画线）
     const magnetPreview = document.createElement("canvas");
@@ -1640,11 +1786,28 @@ async function initModel(){
     const btnModeMP   = document.getElementById("btnModeMP");
     const btnModeRect = document.getElementById("btnModeRect");
     const btnModeDraw = document.getElementById("btnModeDraw");
-    const btnModeMagnet = document.getElementById("btnModeMagnet");
-    const btnMagnetShape = document.getElementById("btnMagnetShape");
 
-    const btnMagnetBind  = document.getElementById("btnMagnetBind");
+    const btnModeMagnet = document.getElementById("btnModeMagnet");
+    const btnShapePath   = document.getElementById("btnShapePath");
+    const btnShapeLoop  = document.getElementById("btnShapeLoop");
+
+    const btnBindIn     = document.getElementById("btnBindIn");
+    const btnBindOut    = document.getElementById("btnBindOut");
     const btnMagnetClear = document.getElementById("btnMagnetClear");
+
+    function refreshPhysicsUI(){
+      btnShapePath?.classList.toggle("active", magnetShape === "path");
+      btnShapeLoop?.classList.toggle("active", magnetShape === "loop");
+
+      btnBindIn?.classList.toggle("active", magnetBind === "in");
+      btnBindOut?.classList.toggle("active", magnetBind === "out");
+
+      btnGravityOff?.classList.toggle("active", gravityMode === false);
+      btnGravityOn?.classList.toggle("active", gravityMode === true);
+
+      btnShuffleOff?.classList.toggle("active", shuffleMode === false);
+      btnShuffleOn?.classList.toggle("active", shuffleMode === true);
+    }
 
     function setCaptureMode(m){
       captureMode = m;
@@ -1665,54 +1828,59 @@ async function initModel(){
     btnModeDraw.onclick = () => setCaptureMode("draw");
     btnModeGrid.onclick = () => setCaptureMode("grid");
 
-btnModeMagnet.onclick = () => setCaptureMode("magnet");
+    btnModeMagnet.onclick = () => setCaptureMode("magnet");
 
-    // shape: LOOP <-> PATH
-    btnMagnetShape.onclick = ()=>{
-      const now = btnMagnetShape.textContent.trim();
-      const next = (now === "LOOP") ? "PATH" : "LOOP";
-      btnMagnetShape.textContent = next;
-
-      // 切形状时，bind 文案同步
-      if (next === "LOOP"){
-        btnMagnetBind.textContent = "IN";
-      } else {
-        btnMagnetBind.textContent = "ON";
-      }
-
-      // 有场的话，切形状直接清场（避免逻辑混乱）
+        btnShapePath?.addEventListener("click", ()=>{
       if (field){
         field = null;
         fieldPts = [];
         fieldDrawing = false;
         clearFieldOverlay();
         showHint("Field cleared (switch shape)", 900);
-      }else{
-        showHint("Magnet shape: " + next, 700);
       }
-    };
 
-    // bind: LOOP => IN/OUT ; PATH => ON
-    btnMagnetBind.onclick = ()=>{
-      const shape = btnMagnetShape.textContent.trim();
-      if (shape === "LOOP"){
-        const now = btnMagnetBind.textContent.trim();
-        btnMagnetBind.textContent = (now === "IN") ? "OUT" : "IN";
-        showHint("Bind: " + btnMagnetBind.textContent, 700);
+      magnetShape = "path";
+      refreshPhysicsUI();
+    });
 
-        // 已有 loop 场：切 IN/OUT 立刻重分配 docks
-        if (field && field.kind === "loop"){
-          field.bind = (btnMagnetBind.textContent.trim() === "OUT") ? "out" : "in";
-          assignDocksForField();
-          startGravityLoop();
-          drawFieldOverlay(field.pts, field.kind, btnMagnetBind.textContent.trim());
-        }
-      } else {
-        btnMagnetBind.textContent = "ON";
-        showHint("Bind: ON", 700);
+    btnShapeLoop?.addEventListener("click", ()=>{
+      if (field){
+        field = null;
+        fieldPts = [];
+        fieldDrawing = false;
+        clearFieldOverlay();
+        showHint("Field cleared (switch shape)", 900);
       }
-    };
 
+      magnetShape = "loop";
+      refreshPhysicsUI();
+    });
+
+    btnBindIn?.addEventListener("click", ()=>{
+      magnetBind = "in";
+      refreshPhysicsUI();
+      showHint("Bind: IN", 700);
+
+      if (field && field.kind === "loop"){
+        field.bind = "in";
+        assignDocksForField();
+        startGravityLoop();
+        drawFieldOverlay(field.pts, field.kind, "IN");
+      }
+    });
+
+    btnBindOut?.addEventListener("click", ()=>{
+      magnetBind = "out";
+      refreshPhysicsUI();
+      showHint("Bind: OUT", 700);
+
+      if (field && field.kind === "loop"){
+        field.bind = "out";
+        assignDocksForField();
+        startGravityLoop();
+        drawFieldOverlay(field.pts, field.kind, "OUT");
+      }
+    });
     // 清场
     btnMagnetClear.onclick = ()=>{
       field = null;
@@ -2504,8 +2672,8 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
         fieldPts.push({ x:p.x, y:p.y });
 
         // 先画一个 draft
-        const kind = (btnMagnetShape.textContent.trim() === "PATH") ? "path" : "loop";
-        drawFieldOverlay(fieldPts, kind, btnMagnetBind.textContent.trim());
+        const kind = magnetShape;
+        drawFieldOverlay(fieldPts, kind, magnetBind.toUpperCase());
         return;
       }
       stageTap.down = true;
@@ -2541,8 +2709,8 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
           fieldPts.push({ x:p.x, y:p.y });
         }
 
-        const kind = (btnMagnetShape.textContent.trim() === "PATH") ? "path" : "loop";
-        drawFieldOverlay(fieldPts, kind, btnMagnetBind.textContent.trim());
+      const kind = magnetShape;
+      drawFieldOverlay(fieldPts, kind, magnetBind.toUpperCase());
         return;
       }
       if (!pointerDown || !startPt) return;
@@ -2605,17 +2773,8 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
           return;
         }
 
-        const kindText = btnMagnetShape.textContent.trim(); // LOOP / PATH
-        const kind = (kindText === "PATH") ? "path" : "loop";
-
-        // bind：LOOP -> IN/OUT；PATH -> ON
-        let bind = "on";
-        if (kind === "loop"){
-          bind = (btnMagnetBind.textContent.trim() === "OUT") ? "out" : "in";
-        } else {
-          btnMagnetBind.textContent = "ON";
-          bind = "on";
-        }
+        const kind = magnetShape;
+        const bind = magnetBind;
 
         // LOOP：强制闭合（把起点补到末尾）
         if (kind === "loop"){
@@ -2639,12 +2798,12 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
         assignDocksForField();
 
         // ✅ 场持久显示：保留在 magnetPreview 上
-        drawFieldOverlay(field.pts, field.kind, btnMagnetBind.textContent.trim());
+        drawFieldOverlay(field.pts, field.kind, magnetBind.toUpperCase());
 
         // ✅ 即使 Gravity OFF，也要让它动起来
         startGravityLoop();
 
-        showHint(kind === "loop" ? ("FIELD " + btnMagnetBind.textContent.trim()) : "FIELD ON PATH", 900);
+        showHint(kind === "loop" ? ("FIELD " + magnetBind.toUpperCase()) : "FIELD ON PATH", 900);
         return;
       }
 
@@ -3163,36 +3322,39 @@ async function renderArchiveGrid(){
       showHint(facingMode === "user" ? "前置（镜像）" : "后置", 700);
     });
 
-const btnGravity = document.getElementById("btnGravity");
+    const btnGravityOff = document.getElementById("btnGravityOff");
+    const btnGravityOn  = document.getElementById("btnGravityOn");
 
-    const btnShuffleMode = document.getElementById("btnShuffleMode");
+    const btnShuffleOff = document.getElementById("btnShuffleOff");
+    const btnShuffleOn  = document.getElementById("btnShuffleOn");
 
-    btnShuffleMode.addEventListener("click", async ()=>{
-      const next = !shuffleMode;
+    btnShuffleOn?.addEventListener("click", async ()=>{
+      if (shuffleMode) return;
 
-      // 打开 Shuffle ON：此刻才请求 Motion 权限
-      if (next){
-        const ok = await ensureShakeReady();
-        if (!ok){
-          shuffleMode = false;
-          btnShuffleMode.textContent = "Shuffle OFF";
-          btnShuffleMode.classList.remove("active");
-          showHint("需要 Motion 权限才能摇一摇 Shuffle", 1200);
-          return;
-        }
-        showHint("Shuffle: shake to swap", 900);
-      }else{
-        showHint("Shuffle OFF", 700);
+      const ok = await ensureShakeReady();
+      if (!ok){
+        shuffleMode = false;
+        refreshPhysicsUI();
+        showHint("需要 Motion 权限才能摇一摇 Shuffle", 1200);
+        return;
       }
 
-      shuffleMode = next;
-      btnShuffleMode.textContent = shuffleMode ? "Shuffle ON" : "Shuffle OFF";
-      btnShuffleMode.classList.toggle("active", shuffleMode);
+      shuffleMode = true;
+      refreshPhysicsUI();
+      showHint("Shuffle: shake to swap", 900);
     });
 
-btnGravity.addEventListener("click", async ()=>{
-  // 切到 ON
-  if (!gravityMode){
+    btnShuffleOff?.addEventListener("click", ()=>{
+      if (!shuffleMode) return;
+
+      shuffleMode = false;
+      refreshPhysicsUI();
+      showHint("Shuffle OFF", 700);
+    });
+
+  btnGravityOn?.addEventListener("click", async ()=>{
+    if (gravityMode) return;
+
     try{
       const ok = await ensureTiltReady();
       if (!ok){
@@ -3203,25 +3365,23 @@ btnGravity.addEventListener("click", async ()=>{
       window.addEventListener("deviceorientation", onDeviceOrientation, true);
 
       gravityMode = true;
-      btnGravity.textContent = "Gravity ON";
-      btnGravity.classList.add("active");
+      refreshPhysicsUI();
       showHint("Gravity ON：倾斜手机推动碎片", 1200);
 
       startGravityLoop();
     }catch(e){
       showHint("Gravity permission error", 1200);
     }
-    return;
-  }
+  });
 
-  // 切到 OFF
-  gravityMode = false;
-  window.removeEventListener("deviceorientation", onDeviceOrientation, true);
-  btnGravity.textContent = "Gravity OFF";
-  btnGravity.classList.remove("active");
-  showHint("Gravity OFF", 800);
-});
+  btnGravityOff?.addEventListener("click", ()=>{
+    if (!gravityMode) return;
 
+    gravityMode = false;
+    window.removeEventListener("deviceorientation", onDeviceOrientation, true);
+    refreshPhysicsUI();
+    showHint("Gravity OFF", 800);
+  });
 
     // ===== 全局视频滤镜：事件绑定 =====
     const btnVidBW   = document.getElementById("btnVidBW");
@@ -3568,6 +3728,8 @@ let shuffleMode = false;
 
 let shakeReady = false;
 let tiltReady  = false;
+
+refreshPhysicsUI();
 
 async function ensureShakeReady(){
   if (shakeReady) return true;
