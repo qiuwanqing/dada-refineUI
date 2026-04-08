@@ -1,0 +1,3869 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>MP+RE+DR+grid+EM+GO+M/ipad</title>
+
+  <!------------------ vConsole: 移动端调试工具 ------------------------>
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+  <script>var vConsole = new VConsole();</script>
+
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    body { margin:0; background:#0b0c10; color:#e8e8e8; overflow:hidden; }
+    html, body { height: 100%; }
+    button { font: inherit; }
+
+   /* ---------------- Topbar 顶部按钮栏 ---------------- */
+    .topbar{
+      position: absolute; top:0; left:0; right:0;
+      z-index: 40;
+      display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center;
+      padding:10px 10px calc(10px + env(safe-area-inset-top));
+      background: linear-gradient(to bottom, rgba(0,0,0,.86), rgba(0,0,0,0));
+      pointer-events:auto;
+    }
+
+     /* 顶部按钮通用样式 */
+    /*.topbar button{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      backdrop-filter: blur(10px);
+      -webkit-tap-highlight-color: transparent;
+      cursor:pointer;
+    }
+
+    /*-----------------------分组折叠样式--------------------------*/
+   .groupFold {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    }
+
+    .groupContent {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0px;
+        margin-top: 0px;
+
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(0) scaleY(1);
+        transform-origin: top center;
+        pointer-events: none;
+
+        transition:
+        max-height 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.20s ease,
+        transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .groupFold.expanded .groupContent {
+        max-height: 420px;
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+        pointer-events: auto;
+    }
+
+    /* .foldBtn {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    cursor: pointer;
+    }
+
+    /* 让 archiveOverlay 里的按钮风格和topbar一致 */
+    #archiveOverlay button{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      backdrop-filter: blur(10px);
+      -webkit-tap-highlight-color: transparent;
+      cursor:pointer;
+    }
+
+    #archiveOverlay button.primary{
+      border-color: rgba(160,210,255,.60);
+    }
+
+    #archiveOverlay button:active{
+      transform: translateY(0.5px);
+    }
+
+    /* 让 editbar 里的按钮视觉和 topbar 一致 */
+    #editbar button{
+    padding:8px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.08);
+    color:#fff;
+    backdrop-filter: blur(10px);
+    -webkit-tap-highlight-color: transparent;
+    cursor:pointer;
+    }
+    #editbar button:active{ transform: translateY(0.5px); }
+    #editbar button.primary{ border-color: rgba(160,210,255,.60); }
+    #editbar button.danger{ border-color: rgba(255,120,120,.55); }
+    #editbar button.active{
+    border-color: rgba(255,255,255,.75);
+    background: rgba(255,255,255,.16);
+    }
+    /* ---------------- Stage 主显示区域 ---------------- */
+    #stage{
+      position: relative;
+      width: 100vw;
+      height: calc(var(--vh, 1vh) * 100);
+      overflow:hidden;
+      touch-action:none;
+      background:#000;
+      user-select:none;
+    }
+     /* ---------------- 视频层 -------------------------- */
+    #video{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit: contain;   /* ✅ 不裁切，完整显示 */
+      background:#000;       /* ✅ 黑边 */
+      transform-origin:center;
+      z-index:1;
+    }
+    
+    /* ---------------- Loader 加载提示 ---------------- */
+    #loader{
+      position:absolute; left:50%; top:50%;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      color:#aaa;
+      font-size: 14px;
+      text-align:center;
+      line-height:1.35;
+      pointer-events:none;
+      padding:8px 10px;
+      border-radius:12px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+    }
+    
+    /* ---------------- Hint 提示信息 ---------------- */
+    #hint{
+      position:absolute;
+      left:50%;
+      bottom: calc(86px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 35;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.88);
+      background: rgba(0,0,0,0.38);
+      border: 1px solid rgba(255,255,255,0.16);
+      backdrop-filter: blur(10px);
+      pointer-events:none;
+      opacity:0;
+      transition: opacity .18s;
+      max-width: 86vw;
+      text-align:center;
+      line-height:1.25;
+    }
+    #hint.show{ opacity:1; }
+
+    /* ---------------- Magnet 预览层 ---------------- */
+    #magnetPreview{
+      position:absolute;
+      inset:0;
+      z-index: 34;
+      pointer-events:none;
+    }
+    
+    /* ---------------- ROI 框 ---------------- */
+    #roiBox{
+      position:absolute;
+      border:1px solid rgba(255,255,255,.85);
+      background: rgba(255,255,255,.08);
+      border-radius:0px;
+      pointer-events:none;
+      display:none;
+      z-index: 9;
+    }
+
+    #roiGrid{
+      position:absolute;
+      inset:0;            /* 填满 roiBox */
+      pointer-events:none;
+      display:none;       /* 默认不显示 */
+      /* 网格线：用 CSS 变量控制间距 */
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgba(255,255,255,0.55) 0,
+          rgba(255,255,255,0.55) 1px,
+          transparent 1px,
+          transparent var(--cellW, 40px)
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,0.55) 0,
+          rgba(255,255,255,0.55) 1px,
+          transparent 1px,
+          transparent var(--cellH, 40px)
+        );
+      mix-blend-mode: screen; /* 可选：更亮一点 */
+    }
+
+    /* ---------------- 绘制层 ---------------- */
+    #drawLayer{
+      position:absolute; inset:0;
+      z-index: 8;
+      pointer-events:none;
+    }
+    
+    /* ---------------- Sticker 贴纸元素 ---------------- */
+    .sticker{
+      position:absolute;
+      left:0; top:0;
+      z-index: 10;
+      border-radius:0px;/* ✅ 冷冻窗*/
+      border:1px solid rgba(255,255,255,0);  /* ✅ 冷冻窗*/
+      box-shadow: 0 10px 30px rgba(0,0,0,0);/* ✅ 冷冻窗*/
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0));/* ✅ 冷冻窗*/
+      transform-origin: center;
+      touch-action:none;
+      cursor: grab;
+      animation: popIn .28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .sticker:active{ cursor:grabbing; }
+    .sticker.selected{
+      border-color: rgba(255,255,255,0);
+      box-shadow: 0 10px 30px rgba(0,0,0,.55);
+      outline: 0px solid rgba(255,255,255,0.95);
+      outline-offset: 3px;
+    }
+    @keyframes popIn{
+      from { transform: scale(.88); opacity:0; }
+      to   { transform: scale(1); opacity:1; }
+    }
+
+    /* ---------------- 底部编辑栏 ---------------- */
+    #editbar{
+      position:absolute; left:0; right:0; bottom:0;
+      z-index: 50;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      display:none;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+    #editbar *{ pointer-events:auto; }
+
+    #gridbar{
+      position: fixed;
+      left:0; 
+      right:0; 
+      bottom:0;
+      z-index: 9999;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      display:none;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+    #gridbar *{ pointer-events:auto; }
+
+    #sidebar{
+      position: fixed;
+      left:0; right:0; bottom:0;
+      z-index: 10000;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      display:none;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      pointer-events:auto;
+    }
+    #sidebar *{ 
+        pointer-events:auto; 
+        touch-action: none; 
+    }
+    #sidebar * {
+        pointer-events: auto;      /* 子元素允许捕获事件 */
+      }
+
+    #gridbar button{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      backdrop-filter: blur(10px);
+      cursor:pointer;
+    }
+    #gridbar button.primary{ border-color: rgba(160,210,255,.60); }
+
+    .seg{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center;
+      width:100%;
+    }
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      color: #ddd;
+    }
+    input[type="range"]{ width:140px; }
+    
+    /* ---------------- Library 面板 ---------------- */
+    #libPanel{
+      position:absolute;
+      left:12px; top:130px;
+      z-index: 60;
+      width: 220px;
+      max-height: 75vh;
+      /*overflow:auto;*/
+      overflow-y: scroll;
+      overflow-x: hidden; 
+      padding:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(20,20,24,.78);
+      backdrop-filter: blur(10px);
+      border-radius: 0px;
+      display:none;
+    }
+    #libPanel h3{
+      margin:0 0 8px 0;
+      font-size: 12px;
+      opacity:.85;
+      font-weight:600;
+      letter-spacing:.02em;
+    }
+    .thumb{
+      width:100%;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      margin-bottom:8px;
+      display:block;
+      cursor:pointer;
+      background:#000;
+    }
+    .row{ display:flex; gap:8px; margin-bottom:8px; }
+    .row button{
+      flex:1; border-radius:10px; padding:6px 8px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+    }
+    .small{ font-size:12px; opacity:.8; }
+    /* ================= Library 缩略图三列布局 ================= */
+    #libList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 三列 */
+    gap: 6px;            /* 列与列、行与行之间间距 */
+    }
+
+    #libList .subBtn {
+    display: flex;        /* 保持原来内容居中 */
+    flex-direction: column; /* 图片在上，文字在下 */
+    align-items: center;
+    justify-content: flex-start;
+    }
+
+/* ---------------- global function---------------- */
+    #globalGroup {
+        position: absolute;
+        left: 20px;    /* 新的 x 坐标 */
+        top: 26px;    /* 新的 y 坐标 */
+        width: auto;    /* 父容器自适应内容宽度 */
+        height: auto;
+        z-index: 50;
+    }
+
+    #globalGroup .foldBtn {
+    width: auto;           /* 不填满父容器，随内容自适应 */
+    height: auto;
+        padding: 0;
+        border: none;
+        background: none;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        cursor: pointer;
+    }
+
+    .globalIcon {
+        width: auto;
+        height: 20px;
+        object-fit: contain;  /* 保持图标比例 */
+        pointer-events: none; /* 点击事件传给按钮 */
+    }
+
+   /* ================= Global Function 子按钮单独尺寸 ================= */
+
+/* Start Camera */
+#btnStart img {
+    width: 70px;      /* 自己设定宽度 */
+    height: auto;     /* 保持比例 */
+    margin-left:0px; /* 单独调整位置 */
+    margin-top: 6px;
+}
+
+/* Flip */
+#btnFlip img {
+    width: 30px;
+    height: auto;
+    margin-left: 20px; /* 调整偏移 */
+    margin-top: 0px;
+}
+
+/* Save Sticker */
+#btnSave img {
+    width: 65px;
+    height: auto;
+    margin-left: 15px;
+    margin-top:0px;
+}
+
+/* Library */
+#btnLibrary img {
+    width: 45px;
+    height: auto;
+    margin-left: 9px;
+    margin-top: -1px;
+}
+/* Delete Selected */
+#btnDeleteSelected img {
+    width: auto;
+    height: 15px;
+    margin-left: 9px;
+    margin-top: 4px;
+}
+
+/* Clear All */
+#btnClearAll img {
+    width: auto;
+    height: 15px;
+    margin-left: 9px;
+    margin-top: 4px;
+}
+
+/* Edit 仍然是文字按钮，可保持原来样式 */
+#btnEdit {
+    width: auto;
+    margin-left: 0px;
+    margin-top: 20px;
+}
+ /* ---------------- 折叠弹动 ---------------- */
+   #rightColumn {
+    position: absolute;
+    right: 15px;
+    top: 26px;
+    z-index: 50;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px; /* 收起时三组之间的基础间距 */
+}
+
+#captureGroup,
+#videoGroup,
+#physicsGroup {
+    position: static;
+    width: auto;
+    height: auto;
+    z-index: auto;
+}
+/* ---------------- capture function ---------------- */
+#captureGroup .foldBtn {
+    width: auto;           /* 不填满父容器，随内容自适应 */
+    height: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start; /* 左对齐折叠图标 */
+    cursor: pointer;
+}
+
+.captureIcon {
+        width: auto;
+        height: 20px;
+    object-fit: contain;  /* 保持图标比例 */
+    pointer-events: none; /* 点击事件传给按钮 */
+}
+
+/* ================= Capture Function 子按钮单独尺寸 ================= */
+
+/* MP */
+#btnModeMP img {
+    width: 40px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 0px;
+}
+
+/* DRAW */
+#btnModeDraw img {
+    width: 70px;
+    height: auto;
+    margin-left: 20px;
+    margin-top: 0px;
+}
+
+/* RECT */
+#btnModeRect img {
+    width: 40px;
+    height: auto;
+    margin-left: 25px;
+    margin-top: 0px;
+}
+
+/* GRID */
+#btnModeGrid img {
+    width: 42px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 0px;
+}
+
+/* 如果将来还有 Side/Mosaic 等按钮，也可以单独写 */
+#btnFxSide img, #btnFxMosaic img {
+    width: 50px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 2px;
+}
+   /* ---------------- video function ---------------- */
+
+#videoGroup .foldBtn {
+    width: auto;           /* 不填满父容器，随内容自适应 */
+    height: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start; /* 左对齐折叠图标 */
+    cursor: pointer;
+}
+
+.videoIcon {
+        width: auto;
+        height: 20px;
+    object-fit: contain;  /* 保持图标比例 */
+    pointer-events: none; /* 点击事件传给按钮 */
+}
+
+/* ================= Video Function 子按钮单独尺寸 ================= */
+
+/* V-B&W */
+#btnVidBW img {
+    width: 60px;
+    height: auto;
+    margin-left: 5px;
+    margin-top: 2px;
+}
+
+/* V-Blur */
+#btnVidBlur img {
+    width: 60px;
+    height: auto;
+    margin-left: 25px;
+    margin-top: 0px;
+}
+
+/* Blur 滑块 */
+#vidBlur {
+    width: 60px;      /* 保留原滑块宽度 */
+    margin-left: -5px;  /* 可调整偏移 */
+    margin-top: 2px;
+} 
+
+/* ---------------- Physics function ---------------- */
+
+#physicsGroup .foldBtn {
+    width: auto;           /* 不填满父容器，随内容自适应 */
+    height: auto;
+    padding: 0;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start; /* 左对齐折叠图标 */
+    cursor: pointer;
+}
+
+.physicsIcon {
+        width: auto;
+        height: 20px;
+    object-fit: contain;  /* 保持图标比例 */
+    pointer-events: none; /* 点击事件传给按钮 */
+}
+/* ---------------- group alineway---------------- */
+    .subBtn {
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    }
+    
+    /* 子按钮通用 */
+    .subBtn {
+        border: none;           /* 去掉边框 */
+        background: none;       /* 去掉背景 */
+        padding: 0;             /* 去掉内边距 */
+        margin: 0;              /* 去掉外边距 */
+        cursor: pointer;        /* 鼠标手型 */
+        display: flex;
+        flex-direction: row;
+        align-items: center; /* 图片左上对齐 */
+        justify-content: flex-start; /* 左对齐 */
+    }
+
+    /* 图片自适应尺寸，保留原始比例 */
+    .subBtn img {
+        display: block;         /* 避免 img 内部多余空白 */
+        max-width: 90%;        /* 最大宽度不超过按钮容器 */
+        max-height: 70%;       /* 最大高度不超过按钮容器 */
+        width: auto;            /* 保持原始宽高比例 */
+        height: auto;           /* 保持原始宽高比例 */
+        pointer-events: none;    /* 点击传递给按钮 */
+    }
+    /* ----------------折叠按钮收起时歪着，展开后摆正-----------------*/
+    #videoGroup > .foldBtn {
+    transform: rotate(345.033deg);
+    transform-origin: center;
+    transition: transform 0.28s ease;
+    }
+
+    #physicsGroup > .foldBtn {
+        transform: rotate(6.861deg);
+        transform-origin: center;
+        transition: transform 0.28s ease;
+    }
+
+    #videoGroup.expanded > .foldBtn,
+    #physicsGroup.expanded > .foldBtn {
+        transform: rotate(0deg);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ==================== 顶部工具栏 Topbar ==================== -->
+    <div class="topbar">
+
+    <!-- ================= Global Functions ================= -->
+    <div class="groupFold" id="globalGroup">
+        <button class="foldBtn">
+            <img src="assets/global_icon.png" alt="Global" class="globalIcon">
+        </button>
+        <div class="groupContent">
+            <!-- 每个按钮用你做好的 PNG，保留原来的 id -->
+                <button id="btnStart" class="subBtn">
+                <img src="assets/startcamera.png" alt="Start Camera">
+                </button>
+
+                <button id="btnFlip" class="subBtn">
+                <img src="assets/flip.png" alt="Flip">
+                </button>
+
+                <button id="btnSave" class="subBtn disabled">
+                <img src="assets/save.png" alt="Save Sticker">
+                </button>
+
+                <button id="btnLibrary" class="subBtn">
+                <img src="assets/library.png" alt="Library">
+                </button>
+
+                <button id="btnDeleteSelected" class="subBtn">
+                    <img src="assets/delete.png" alt="Delete">
+                </button>
+                <button id="btnClearAll" class="subBtn">
+                    <img src="assets/clear.png" alt="Clear">
+                </button>
+        <button id="btnEdit" class="primary disabled">Edit</button>
+
+        </div>
+    </div>
+<div id="rightColumn">
+<!-- ================= Capture Functions ================= -->
+    <div class="groupFold" id="captureGroup">
+        <button class="foldBtn">
+            <img src="assets/capture_icon.png" alt="Capture" class="captureIcon">
+        </button>
+        <div class="groupContent">
+            <!-- 用 PNG 替代文字按钮 -->
+            <button id="btnModeMP" class="subBtn">
+                <img src="assets/MP.png" alt="MP">
+            </button>
+            <button id="btnModeDraw" class="subBtn">
+                <img src="assets/draw.png" alt="DRAW">
+            </button>
+            <button id="btnModeRect" class="subBtn">
+                <img src="assets/rect.png" alt="RECT">
+            </button>
+            <button id="btnModeGrid" class="subBtn">
+                <img src="assets/grid.png" alt="GRID">
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= Video Functions ================= -->
+    <div class="groupFold" id="videoGroup">
+        <button class="foldBtn">
+            <img src="assets/video_icon.png" alt="Video" class="videoIcon">
+        </button>
+        <div class="groupContent">
+            <button id="btnVidBW" class="subBtn">
+                <img src="assets/vbw.png" alt="V-B&W">
+            </button>
+            <button id="btnVidBlur" class="subBtn">
+                <img src="assets/vblur.png" alt="V-Blur">
+            </button>
+            <input id="vidBlur" type="range" min="0" max="18" value="0" style="width:110px;">
+        </div>
+    </div>
+
+    <!-- ================= Physics / Fisk Functions ================= -->
+    <div class="groupFold" id="physicsGroup">
+        <button class="foldBtn">
+            <img src="assets/physics_icon.png" alt="Physics" class="physicsIcon">
+        </button>
+        <div class="groupContent">
+        <button id="btnModeMagnet">MAGNET</button>
+        <button id="btnMagnetShape" class="primary">LOOP</button>
+        <button id="btnMagnetBind"  class="primary">IN</button>
+        <button id="btnMagnetClear">Field Clear</button>
+        <button id="btnGravity" class="primary">Gravity OFF</button>
+        <button id="btnShuffleMode" class="primary">Shuffle OFF</button>
+        <button id="btnFxMBlur" class="primary">M-Blur</button>
+        </div>
+    </div>
+
+    </div>
+    </div>
+  <!-- ==================== 主舞台 Stage ==================== -->
+  <div id="stage">
+    <video id="video" playsinline muted autoplay></video><!-- 摄像头视频层 -->
+    <canvas id="drawLayer"></canvas><!-- 绘制层，用于自由绘制或显示 mask/ROI -->
+    
+    <!-- ROI 框及网格 -->
+    <div id="roiBox">
+      <div id="roiGrid"></div><!-- ROI 内部网格 -->
+    </div>
+    
+    <!-- 加载状态 -->
+    <div id="loader">加载模型中…<br/>（加载完后点 Start Camera）</div>
+    <!-- 提示信息 -->
+    <div id="hint"></div>
+   
+    <!-- ==================== Grid 设置栏 ==================== -->
+    <div id="gridbar">
+  <div class="seg">
+    <span class="pill">
+      rows
+      <input id="gridRows" type="range" min="1" max="12" value="3" />
+      <span id="gridRowsVal">3</span>
+    </span>
+
+    <span class="pill">
+      cols
+      <input id="gridCols" type="range" min="1" max="12" value="4" />
+      <span id="gridColsVal">4</span>
+    </span>
+
+    <button id="btnGridCancel">cancel</button>
+    <button id="btnGridDone" class="primary">done</button>
+  </div>
+</div>
+
+<!-- ==================== Sidebar 设置栏 ==================== -->
+<div id="sidebar">
+  <div class="seg">
+    <span class="pill">
+      length
+      <input id="sideLen" type="range" min="2" max="600" value="18" />
+      <span id="sideLenVal">18</span>
+    </span>
+
+    <span class="pill">
+      direction
+      <input id="sideAng" type="range" min="0" max="360" value="63" />
+      <span id="sideAngVal">63°</span>
+    </span>
+
+    <button id="btnSideCancel">cancel</button>
+    <button id="btnSideApply" class="primary">apply</button>
+  </div>
+</div>
+    
+<!-- ==================== Library 面板 ==================== -->
+    <div id="libPanel">
+      <div class="row">
+        <button id="btnLibClose">Close</button><!-- 关闭 Library -->
+        <button id="btnLibClear">Clear</button><!-- 清空 Library -->
+        <button id="btnOpenArchive" class="primary">Open Archive</button>
+      </div>
+      <h3>LIBRARY</h3>
+      <div id="libList" class="small"></div>
+    </div>
+  </div>
+
+  <!-- ==================== Archive Overlay 弹出层 ==================== -->
+  <div id="archiveOverlay" style="
+    position:fixed; inset:0; z-index:20000;
+    display:none; background: rgba(0,0,0,.92);
+    backdrop-filter: blur(10px);
+  ">
+    <div style="
+      position:absolute; left:0; right:0; top:0;
+      padding: 10px 10px calc(10px + env(safe-area-inset-top));
+      display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+      background: linear-gradient(to bottom, rgba(0,0,0,.85), rgba(0,0,0,0));
+    ">
+      <button id="btnArcClose" class="primary">Close</button><!-- 关闭归档 -->
+    </div>
+
+    <div id="archiveGrid" style="
+      position:absolute; inset:64px 0 0 0;
+      padding: 10px;
+      overflow:auto;
+
+      display:flex;
+      flex-wrap:wrap;
+      align-content:flex-start;
+      align-items:flex-start;
+
+      gap:10px;
+    "></div><!-- 归档缩略图显示 -->
+  </div>
+
+  <!-- ==================== 编辑栏 Editbar ==================== -->
+  <div id="editbar">
+    <div class="seg">
+        <!-- 原来的 <span class="pill">distort</span> -->
+        <!-- ✅ 改成可点击按钮，同时绑定 id -->
+        <button id="btnFxDistort" class="primary">Distort</button>
+
+        <!-- distort 滑块容器，初始隐藏 -->
+        <span id="distortControls" style="display:none;">
+            <span class="pill">
+                radius
+                <input id="radius" type="range" min="10" max="220" value="120">
+            </span>
+            <span class="pill">
+                strength
+                <input id="strength" type="range" min="-100" max="100" value="85">
+            </span>
+        </span>
+        <button id="btnFxBlur" class="primary">Blur</button>
+        <!-- Blur 滑块容器，初始隐藏 -->
+        <span id="blurControls" style="display:none;">
+            <span class="pill">
+                strength
+                <input id="blurStrength" type="range" min="1" max="30" value="1">
+            </span>
+        </span>
+        <button id="btnFxBW" class="primary">B&W</button>
+        <button id="btnFxNoise" class="primary">Noise</button>
+
+            <!-- 新增层级：Side / Mosaic -->
+        <button id="btnFxSide" class="primary">Side</button>
+        <button id="btnFxMosaic" class="primary">Mosaic</button>
+
+    <button id="btnUndoPaint">undo</button>
+    <button id="btnDone" class="danger">done</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+      
+    // 云端库配置Supabase 初始化
+      const SUPABASE_URL = "https://vbhlolqwjgbffomenuec.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_nVz1LIBAF6qgmYMC97tL3g_mkL-uhur";
+      const BUCKET_NAME = "library-images";
+    // 初始化 Supabase 客户端，用于上传、下载、管理 Library
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // 主舞台/视频/绘制层
+      const stage = document.getElementById("stage");
+      const video = document.getElementById("video");
+      const roiBox = document.getElementById("roiBox");
+      const drawLayer = document.getElementById("drawLayer");
+      const drawCtx = drawLayer.getContext("2d");
+
+      // Loader & 提示信息
+      const loader = document.getElementById("loader");
+      const hint = document.getElementById("hint");
+      
+      // 编辑栏
+      const editbar = document.getElementById("editbar");
+      const radiusEl = document.getElementById("radius");
+      const strengthEl = document.getElementById("strength");
+      const btnFxSide = document.getElementById("btnFxSide");
+      const btnFxMosaic = document.getElementById("btnFxMosaic");
+
+      // Library 面板
+      const libPanel = document.getElementById("libPanel");
+      const libList  = document.getElementById("libList");
+
+      // Archive 面板
+      const archiveOverlay = document.getElementById("archiveOverlay");
+      const archiveGrid = document.getElementById("archiveGrid");
+      const btnArcClose = document.getElementById("btnArcClose");
+      const btnOpenArchive = document.getElementById("btnOpenArchive");
+
+      // 全局按钮Save/Edit/Delete
+      const btnSave = document.getElementById("btnSave");
+      const btnEdit = document.getElementById("btnEdit");
+      const btnDeleteSelected = document.getElementById("btnDeleteSelected");
+
+      // Grid 相关
+      const btnModeGrid = document.getElementById("btnModeGrid");
+      const gridbar = document.getElementById("gridbar");
+      const gridRowsEl = document.getElementById("gridRows");
+      const gridColsEl = document.getElementById("gridCols");
+
+      const gridRowsVal = document.getElementById("gridRowsVal");// 显示行数
+      const gridColsVal = document.getElementById("gridColsVal"); // 显示列数
+
+      // Side 控制强度和方向bar
+      const sidebar = document.getElementById("sidebar");
+      const sideLenEl = document.getElementById("sideLen");
+      const sideAngEl = document.getElementById("sideAng");
+      const sideLenVal = document.getElementById("sideLenVal");
+      const sideAngVal = document.getElementById("sideAngVal");
+
+      // ROI 网格
+      const roiGrid = document.getElementById("roiGrid");
+
+      let pendingGridRect = null;
+
+      
+
+    // grid groups
+    let gridGroups = [];
+    let gridGroupSeq = 1;
+
+    // ============================== 新增折叠逻辑 ======
+    document.querySelectorAll(".groupFold > .foldBtn").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+            const group = btn.parentElement;
+            group.classList.toggle("expanded"); // 切换展开状态
+        });
+    });
+
+    
+    // ===== distort=====
+    const btnFxDistort = document.getElementById("btnFxDistort");
+    const distortControls = document.getElementById("distortControls");
+
+    // 核心处理函数：根据 radius 和 strength 处理 distort
+    function updateDistort(){
+        const r = radiusEl.value;
+        const s = strengthEl.value;
+
+        // 这里写你的 distort 逻辑
+        // 例如画 canvas 或处理图像
+        console.log("distort update:", r, s); // 暂时用 log 占位
+    }
+
+    // 滑块事件：实时更新
+    radiusEl.addEventListener("input", updateDistort);
+    strengthEl.addEventListener("input", updateDistort);
+
+    // 按钮点击事件：切换显示 + 调用一次效果
+    btnFxDistort.addEventListener("click", () => {
+        const visible = distortControls.style.display === "flex";
+        distortControls.style.display = visible ? "none" : "flex";
+
+        btnFxDistort.classList.toggle("active"); // 高亮按钮
+
+        // 点击按钮时也执行一次效果
+        updateDistort();
+    });
+
+    // ===== blur =====
+    // ===== Editbar Blur 独立状态 =====
+let editBlurFx = { active: false, radius: 10 };
+
+const blurBtn = document.getElementById("btnFxBlur");
+const blurControls = document.getElementById("blurControls");
+
+// ===== 重绘 canvas 并应用模糊 =====
+function redrawDrawLayer() {
+  drawCtx.clearRect(0, 0, drawLayer.width, drawLayer.height);
+
+  for (const st of stickers) {
+    if (st.selected) {
+      drawCtx.filter = `blur(${editBlurFx.radius}px)`;
+    } else {
+      drawCtx.filter = 'none';
+    }
+    drawCtx.drawImage(st.image, st.x, st.y, st.w, st.h);
+  }
+}
+
+// ===== 滑块控制函数 =====
+function applyEditBlur() {
+  const r = Number(radiusEl.value);
+  editBlurFx.radius = r;
+  editBlurFx.active = r > 0;
+
+  redrawDrawLayer();
+  blurBtn.classList.toggle("active", editBlurFx.active);
+}
+
+// 滑块事件绑定
+radiusEl.addEventListener("input", applyEditBlur);
+
+// 点击按钮显示/隐藏滑块
+blurBtn.addEventListener("click", () => {
+  const visible = blurControls.style.display === "flex";
+  blurControls.style.display = visible ? "none" : "flex";
+});
+
+    // ===== MAGNET v2: Shape Field (LOOP / PATH) + Dock binding =====
+    let field = null;
+    /*
+    field = {
+      kind: "loop" | "path",
+      bind: "in" | "out" | "on",   // loop 用 in/out；path 用 on
+      pts: [ {x,y}, ... ],         // 手绘点（stage 坐标）
+      docks: new Map(),            // sticker -> {x,y}
+      strength: 980,
+      swirl: 2.4,
+      damping: 0.86
+    };
+    */
+
+    let fieldDrawing = false;
+    let fieldPts = []; // 正在画的点（松手后写入 field.pts）
+
+    // 预览 canvas（画圈/画线）
+    const magnetPreview = document.createElement("canvas");
+    magnetPreview.id = "magnetPreview";
+    stage.appendChild(magnetPreview);
+    const mctx = magnetPreview.getContext("2d");
+
+    function resizeMagnetPreview(){
+      const r = stage.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      magnetPreview.width = Math.round(r.width * dpr);
+      magnetPreview.height = Math.round(r.height * dpr);
+      magnetPreview.style.width = r.width + "px";
+      magnetPreview.style.height = r.height + "px";
+      mctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener("resize", resizeMagnetPreview);
+    window.visualViewport?.addEventListener("resize", resizeMagnetPreview);
+    resizeMagnetPreview();
+
+    function clearMagnetPreview(){
+      mctx.clearRect(0,0,magnetPreview.width, magnetPreview.height);
+    }
+
+    function drawMagnetPreviewCircle(x0,y0,x1,y1){
+      clearMagnetPreview();
+      const r = Math.hypot(x1-x0, y1-y0);
+      mctx.strokeStyle = "rgba(255,255,255,.75)";
+      mctx.lineWidth = 2;
+      mctx.beginPath();
+      mctx.arc(x0,y0,r,0,Math.PI*2);
+      mctx.stroke();
+
+      mctx.fillStyle = "rgba(255,255,255,.12)";
+      mctx.beginPath();
+      mctx.arc(x0,y0,r,0,Math.PI*2);
+      mctx.fill();
+    }
+
+    function drawMagnetPreviewLine(x0,y0,x1,y1){
+      clearMagnetPreview();
+      mctx.strokeStyle = "rgba(255,255,255,.75)";
+      mctx.lineWidth = 2;
+      mctx.lineCap = "round";
+      mctx.beginPath();
+      mctx.moveTo(x0,y0);
+      mctx.lineTo(x1,y1);
+      mctx.stroke();
+
+      // 端点提示（吸到线的终点）
+      mctx.fillStyle = "rgba(255,255,255,.75)";
+      mctx.beginPath();
+      mctx.arc(x1,y1,4,0,Math.PI*2);
+      mctx.fill();
+    }
+
+    const showHint = (text, ms=900) => {
+      hint.textContent = text;
+      hint.classList.add("show");
+      clearTimeout(showHint._t);
+      showHint._t = setTimeout(() => hint.classList.remove("show"), ms);
+    };
+
+    function setActionEnabled(enabled){
+      btnSave.classList.toggle("disabled", !enabled);
+      btnEdit.classList.toggle("disabled", !enabled);
+      btnDeleteSelected?.classList.toggle("disabled", !enabled);
+    }
+
+    let stream = null;
+    let facingMode = "environment";
+
+    let captureMode = "mp";
+    let pointerDown = false;
+    let startPt = null;
+    let roi = null;
+    let path = [];
+
+    let stickers = [];
+    let selected = null;
+
+    let editMode = "stretch";
+    let paintUndoStack = [];
+
+    let InteractiveSegmenter = null;
+    let FilesetResolver = null;
+
+
+    let interactiveSegmenter = null;
+    let isProcessing = false;
+
+    // ===== 全局视频滤镜状态 =====
+    let videoFx = {
+    bw: false,
+    blur: false,
+    blurPx: 0
+    };
+    
+
+    // ===== 全局视频滤镜：真正的全局函数（按钮才能调用到）=====
+    function applyVideoFilter(){
+    const parts = [];
+
+    // 黑白
+    if (videoFx.bw) parts.push("grayscale(1)");
+
+    // 模糊
+    if (videoFx.blur && videoFx.blurPx > 0) {
+        parts.push(`blur(${videoFx.blurPx}px)`);
+    }
+
+    // 应用到 video 上（CSS filter）
+    video.style.filter = parts.length ? parts.join(" ") : "none";
+
+    // 按钮状态同步（让按钮亮/暗）
+    const bwBtn = document.getElementById("btnVidBW");
+    const blurBtn = document.getElementById("btnVidBlur");
+    bwBtn?.classList.toggle("active", videoFx.bw);
+    blurBtn?.classList.toggle("active", videoFx.blur);
+
+    // 滑块同步
+    const slider = document.getElementById("vidBlur");
+    if (slider) slider.value = String(videoFx.blurPx || 0);
+    }
+
+    let gesture = {
+      active:false,
+      startDist:0,
+      startAng:0,
+      baseScale:1,
+      baseRot:0
+    };
+
+    const LIB_KEY = "capture_library_v2";
+
+    const DEVICE_KEY = "capture_device_id_v1";
+
+function getDeviceId(){
+  let id = localStorage.getItem(DEVICE_KEY);
+  if (!id){
+    id = crypto.randomUUID();
+    localStorage.setItem(DEVICE_KEY, id);
+  }
+  return id;
+}
+
+function dataURLToBlob(dataURL){
+  const arr = dataURL.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--){
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
+async function loadLibrary(){
+  const { data, error } = await supabase
+    .from("library_items")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error){
+    console.error("loadLibrary error:", error);
+    showHint("加载云端 library 失败", 1200);
+    return [];
+  }
+
+  return (data || []).map(it => ({
+    id: it.id,
+    path: it.image_path,
+    dataURL: it.image_url,
+    image_url: it.image_url,
+    w: Number(it.width) || 160,
+    h: Number(it.height) || 120,
+    t: new Date(it.created_at).getTime(),
+    geo: (it.lat != null && it.lng != null)
+      ? {
+          lat: it.lat,
+          lng: it.lng,
+          accuracy_m: it.accuracy_m
+        }
+      : null,
+    device_id: it.device_id
+  }));
+}
+
+function saveLibrary(items){
+  // 云端版不再使用 localStorage 保存主 library
+}
+
+async function uploadStickerToSupabase(st, geo = null){
+  const dataURL = stickerToDataURL(st);
+  const blob = dataURLToBlob(dataURL);
+
+  const fileName = `${Date.now()}-${crypto.randomUUID()}.png`;
+  const filePath = fileName;
+
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(filePath, blob, {
+      contentType: "image/png",
+      upsert: false
+    });
+
+  if (uploadError){
+    console.error("upload error:", uploadError);
+    throw uploadError;
+  }
+
+  const { data: pub } = supabase.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(filePath);
+
+  const imageUrl = pub?.publicUrl;
+  if (!imageUrl) throw new Error("public url generation failed");
+
+  const payload = {
+    image_path: filePath,
+    image_url: imageUrl,
+    width: st.w,
+    height: st.h,
+    lat: geo?.lat ?? null,
+    lng: geo?.lng ?? null,
+    accuracy_m: geo?.accuracy_m ?? null,
+    device_id: getDeviceId()
+  };
+
+  const { data, error } = await supabase
+    .from("library_items")
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error){
+    console.error("insert db error:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+async function clearLibraryFromSupabase(){
+  const items = await loadLibrary();
+  if (!items.length) return;
+
+  const ids = items.map(it => it.id).filter(Boolean);
+  const paths = items.map(it => it.path).filter(Boolean);
+
+  if (paths.length){
+    const { error: storageError } = await supabase.storage
+      .from(BUCKET_NAME)
+      .remove(paths);
+
+    if (storageError){
+      console.error("storage clear error:", storageError);
+    }
+  }
+
+  if (ids.length){
+    const { error: dbError } = await supabase
+      .from("library_items")
+      .delete()
+      .in("id", ids);
+
+    if (dbError){
+      console.error("db clear error:", dbError);
+      throw dbError;
+    }
+  }
+}
+
+    async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
+  return await new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy_m: pos.coords.accuracy,
+        ts: pos.timestamp
+      }),
+      (err) => {
+        console.warn("geolocation error:", err);
+        resolve(null);
+      },
+      { enableHighAccuracy: highAccuracy, timeout, maximumAge: 15000 }
+    );
+  });
+}
+
+function setVh(){
+  const vh = (window.visualViewport?.height || window.innerHeight) * 0.01;
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
+}
+
+function resizeDrawLayer(){
+  const r = stage.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  drawLayer.width  = Math.round(r.width * dpr);
+  drawLayer.height = Math.round(r.height * dpr);
+  drawLayer.style.width  = r.width + "px";
+  drawLayer.style.height = r.height + "px";
+  drawCtx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+// ✅ iOS：两个 resize 都要监听
+window.addEventListener("resize", ()=>{
+  setVh();
+  resizeDrawLayer();
+});
+window.visualViewport?.addEventListener("resize", ()=>{
+  setVh();
+  resizeDrawLayer();
+});
+
+// ✅ 初始化先跑一次
+setVh();
+
+    function clearPathPreview(){
+      drawCtx.clearRect(0,0, drawLayer.width, drawLayer.height);
+    }
+    function drawPathPreview(points){
+      drawCtx.clearRect(0,0, drawLayer.width, drawLayer.height);
+      if (!points || points.length < 2) return;
+      drawCtx.beginPath();
+      drawCtx.moveTo(points[0].x, points[0].y);
+      for (const p of points) drawCtx.lineTo(p.x, p.y);
+      drawCtx.lineWidth = 2;
+      drawCtx.strokeStyle = "rgba(255,255,255,.65)";
+      drawCtx.lineCap = "round";
+      drawCtx.lineJoin = "round";
+      drawCtx.stroke();
+    }
+
+    function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+    // ===== Field helpers =====
+function pointInPoly(x, y, pts){
+  // ray casting
+  let inside = false;
+  for (let i=0, j=pts.length-1; i<pts.length; j=i++){
+    const xi=pts[i].x, yi=pts[i].y;
+    const xj=pts[j].x, yj=pts[j].y;
+    const intersect = ((yi>y) !== (yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi+1e-9) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function clearFieldOverlay(){
+  clearMagnetPreview(); // ✅ 你已有的函数，清 magnetPreview
+}
+
+function drawFieldOverlay(pts, kind, bindText){
+  // 画在 magnetPreview 上（持久显示场）
+  clearMagnetPreview();
+  if (!pts || pts.length < 2) return;
+
+  mctx.save();
+  mctx.lineWidth = 2;
+  mctx.lineCap = "round";
+  mctx.lineJoin = "round";
+
+  // 主描边
+  mctx.strokeStyle = "rgba(120,200,255,.78)";
+  // loop 填充
+  mctx.fillStyle   = "rgba(120,200,255,.12)";
+
+  mctx.beginPath();
+  mctx.moveTo(pts[0].x, pts[0].y);
+  for (let i=1; i<pts.length; i++) mctx.lineTo(pts[i].x, pts[i].y);
+
+  if (kind === "loop"){
+    mctx.closePath();
+    mctx.fill();
+  }
+  mctx.stroke();
+
+  // 角标文字
+  mctx.fillStyle = "rgba(255,255,255,.78)";
+  mctx.font = "12px system-ui";
+  mctx.fillText(`FIELD: ${bindText}`, pts[0].x + 8, pts[0].y - 8);
+
+  mctx.restore();
+}
+
+function assignDocksForField(){
+  if (!field || !stickers.length) return;
+  field.docks.clear();
+
+  const pts = field.pts;
+
+  // bbox
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  for (const p of pts){
+    minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+    maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+  }
+
+  // spacing（防堆叠）
+  const minDist = 30;
+  const taken = [];
+  const ok = (p)=>{
+    for (const q of taken){
+      if (Math.hypot(p.x-q.x, p.y-q.y) < minDist) return false;
+    }
+    return true;
+  };
+
+  // PATH：严格在线上（取路径上的点分配）
+  if (field.kind === "path"){
+    const candidates = pts.filter((_,i)=> i%2===0);
+    for (let i=0; i<stickers.length; i++){
+      const st = stickers[i];
+      const idx = Math.floor(i * (candidates.length-1) / Math.max(1, stickers.length-1));
+      const p = candidates[clamp(idx,0,candidates.length-1)];
+      field.docks.set(st, { x:p.x, y:p.y });
+    }
+    return;
+  }
+
+  // LOOP：IN/OUT：严格在多边形内/外
+  const PAD = 160; // OUT 的外扩范围（先做简单强绑定版，之后可升级成“贴圈外环”）
+  const bx0 = (field.bind === "out") ? (minX - PAD) : minX;
+  const by0 = (field.bind === "out") ? (minY - PAD) : minY;
+  const bx1 = (field.bind === "out") ? (maxX + PAD) : maxX;
+  const by1 = (field.bind === "out") ? (maxY + PAD) : maxY;
+
+  for (const st of stickers){
+    let found = null;
+
+    for (let k=0; k<1400; k++){
+      const x = bx0 + Math.random() * (bx1 - bx0);
+      const y = by0 + Math.random() * (by1 - by0);
+
+      const inside = pointInPoly(x,y,pts);
+      if (field.bind === "in"  && !inside) continue;
+      if (field.bind === "out" &&  inside) continue;
+
+      const cand = {x,y};
+      if (!ok(cand)) continue;
+
+      found = cand;
+      taken.push(cand);
+      break;
+    }
+
+    // fallback：避免找不到点卡死
+    if (!found){
+      found = (field.bind === "in")
+        ? { x:(minX+maxX)/2, y:(minY+maxY)/2 }
+        : { x:bx1, y:by1 };
+      taken.push(found);
+    }
+
+    field.docks.set(st, found);
+  }
+}
+
+    function localPointFromClient(clientX, clientY){
+      const r = stage.getBoundingClientRect();
+      return { x: clientX - r.left, y: clientY - r.top, W: r.width, H: r.height };
+    }
+
+    function getClientXY(e){
+      if (e.changedTouches && e.changedTouches.length) {
+        return { cx: e.changedTouches[0].clientX, cy: e.changedTouches[0].clientY };
+      }
+      if (e.touches && e.touches.length) {
+        return { cx: e.touches[0].clientX, cy: e.touches[0].clientY };
+      }
+      return { cx: e.clientX, cy: e.clientY };
+    }
+
+    async function startCamera(){
+      if (!navigator.mediaDevices?.getUserMedia) {
+        alert("当前环境不支持摄像头。");
+        return;
+      }
+      if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+        showHint("iOS 相机需要 HTTPS", 1400);
+      }
+
+      if (stream) stream.getTracks().forEach(t => t.stop());
+
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width:{ideal:1920}, height:{ideal:1080} },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        await video.play();
+
+        await new Promise(res=>{
+        if (video.videoWidth) return res();
+        video.addEventListener("loadedmetadata", res, { once:true });
+        });
+
+        video.style.transform = (facingMode === "user") ? "scaleX(-1)" : "none";
+        applyVideoFilter();
+
+        loader.style.display = "none";
+        resizeDrawLayer();
+
+        showHint("MP：点画面=抠图；贴纸：点=选中，拖=移动；双指=旋转缩放", 1800);
+      } catch(e){
+        console.error(e);
+        alert("无法打开相机：请检查权限；iOS 通常需要 https。");
+      }
+    }
+
+async function initModel(){
+  try{
+    loader.innerText = "准备加载 MediaPipe…";
+
+    // ✅ 本地同源 import（iPad Safari 不会 CORS 挡）
+    loader.innerText = "加载 vision_bundle（local ./vendor/vision_bundle.mjs）…";
+
+    let mod = null;
+    try{
+      mod = await import("./vendor/vision_bundle.mjs");
+      console.log("loaded keys:", Object.keys(mod));
+    }catch(e){
+      console.error("import local vendor failed:", e);
+      loader.innerText = "vision_bundle 本地加载失败：\n" + (e?.message || String(e));
+      return;
+    }
+
+    InteractiveSegmenter = mod.InteractiveSegmenter;
+    FilesetResolver = mod.FilesetResolver;
+
+    // ===== 加载 WASM（用你仓库 ./vendor/ 下的文件）=====
+    loader.innerText = "正在下载 WASM（local ./vendor/）…";
+
+    // fetch + arrayBuffer + compile 替代 compileStreaming
+    const wasmResponse = await fetch("./vendor/vision_wasm_internal.wasm");
+    if (!wasmResponse.ok) throw new Error(`WASM fetch failed: ${wasmResponse.status}`);
+    const wasmBuffer = await wasmResponse.arrayBuffer();
+    const wasmModule = await WebAssembly.compile(wasmBuffer);
+
+    console.log("WASM Module compiled successfully");
+
+    // ===== 初始化 FilesetResolver，用本地模块和已编译 WASM =====
+    const vision = await FilesetResolver.forVisionTasks("./vendor/");
+
+    // ===== 加载模型 =====
+    loader.innerText = "正在加载模型（CPU）…";
+
+    interactiveSegmenter = await InteractiveSegmenter.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "./models/magic_touch.tflite",
+        delegate: "CPU",
+        wasmModule: wasmModule, // ✅ 使用本地已编译模块
+      },
+      outputCategoryMask: true,
+      outputConfidenceMasks: false
+    });
+
+    loader.innerText = "模型就绪（CPU），请开启相机";
+    console.log("InteractiveSegmenter initialized successfully");
+
+  }catch(err){
+    console.error(err);
+    loader.innerText = "模型加载失败:\n" + (err?.message || String(err));
+  }
+}
+
+
+    const btnModeMP   = document.getElementById("btnModeMP");
+    const btnModeRect = document.getElementById("btnModeRect");
+    const btnModeDraw = document.getElementById("btnModeDraw");
+    const btnModeMagnet = document.getElementById("btnModeMagnet");
+    const btnMagnetShape = document.getElementById("btnMagnetShape");
+
+    const btnMagnetBind  = document.getElementById("btnMagnetBind");
+    const btnMagnetClear = document.getElementById("btnMagnetClear");
+
+    function setCaptureMode(m){
+      captureMode = m;
+      btnModeMP.classList.toggle("active", m==="mp");
+      btnModeRect.classList.toggle("active", m==="rect");
+      btnModeDraw.classList.toggle("active", m==="draw");
+      btnModeGrid?.classList.toggle("active", m==="grid");
+      btnModeMagnet?.classList.toggle("active", m==="magnet");
+
+      if (m === "mp") showHint("MP：点一下物体自动抠图", 900);
+      if (m === "rect") showHint("RECT：按住拖拽画框，松手截取", 900);
+      if (m === "draw") showHint("DRAW：按住手写路径，松手截取", 900);
+      if (m === "grid") showHint("GRID：拖拽画大框 → 设行列 → done 切成碎片", 1200);
+      if (m === "magnet") showHint("MAGNET：手绘 LOOP/PATH；LOOP 可 IN/OUT；松手后场会保留", 1300);
+    }
+    btnModeMP.onclick = () => setCaptureMode("mp");
+    btnModeRect.onclick = () => setCaptureMode("rect");
+    btnModeDraw.onclick = () => setCaptureMode("draw");
+    btnModeGrid.onclick = () => setCaptureMode("grid");
+
+btnModeMagnet.onclick = () => setCaptureMode("magnet");
+
+    // shape: LOOP <-> PATH
+    btnMagnetShape.onclick = ()=>{
+      const now = btnMagnetShape.textContent.trim();
+      const next = (now === "LOOP") ? "PATH" : "LOOP";
+      btnMagnetShape.textContent = next;
+
+      // 切形状时，bind 文案同步
+      if (next === "LOOP"){
+        btnMagnetBind.textContent = "IN";
+      } else {
+        btnMagnetBind.textContent = "ON";
+      }
+
+      // 有场的话，切形状直接清场（避免逻辑混乱）
+      if (field){
+        field = null;
+        fieldPts = [];
+        fieldDrawing = false;
+        clearFieldOverlay();
+        showHint("Field cleared (switch shape)", 900);
+      }else{
+        showHint("Magnet shape: " + next, 700);
+      }
+    };
+
+    // bind: LOOP => IN/OUT ; PATH => ON
+    btnMagnetBind.onclick = ()=>{
+      const shape = btnMagnetShape.textContent.trim();
+      if (shape === "LOOP"){
+        const now = btnMagnetBind.textContent.trim();
+        btnMagnetBind.textContent = (now === "IN") ? "OUT" : "IN";
+        showHint("Bind: " + btnMagnetBind.textContent, 700);
+
+        // 已有 loop 场：切 IN/OUT 立刻重分配 docks
+        if (field && field.kind === "loop"){
+          field.bind = (btnMagnetBind.textContent.trim() === "OUT") ? "out" : "in";
+          assignDocksForField();
+          startGravityLoop();
+          drawFieldOverlay(field.pts, field.kind, btnMagnetBind.textContent.trim());
+        }
+      } else {
+        btnMagnetBind.textContent = "ON";
+        showHint("Bind: ON", 700);
+      }
+    };
+
+    // 清场
+    btnMagnetClear.onclick = ()=>{
+      field = null;
+      fieldPts = [];
+      fieldDrawing = false;
+      clearFieldOverlay();
+      showHint("Field cleared", 800);
+    };
+
+    function deselect(){
+      if (selected?.el) selected.el.classList.remove("selected");
+      selected = null;
+      editbar.style.display = "none";
+      paintUndoStack = [];
+      setActionEnabled(false);
+    }
+
+    function selectSticker(st){
+      if (selected && selected !== st) selected.el.classList.remove("selected");
+      selected = st;
+      st.el.classList.add("selected");
+      paintUndoStack = [];
+      setActionEnabled(true);
+      showHint("selected", 1200);
+    }
+
+    function deleteSelectedSticker(){
+      if (!selected) return;
+
+      const st = selected;
+
+      // 1) 取消选中 UI
+      deselect();
+
+      // 2) 从 DOM 移除
+      st.el?.remove();
+
+      // 3) 从数组移除
+      stickers = stickers.filter(s => s !== st);
+      //objUndoStack = objUndoStack.filter(s => s !== st);
+
+      // 4) 如果有磁场 dock 绑定，也移除
+      if (field?.docks) field.docks.delete(st);
+
+      showHint("deleted", 700);
+    }
+
+    function applyTransform(st){
+      st.el.style.transform = `translateZ(0) rotate(${st.rot}rad) scale(${st.scale})`;
+    }
+
+    function applyStickerCssFilter(st){
+      const parts = [];
+
+      // 原本的 blur
+      if (st.blurPx > 0) parts.push(`blur(${st.blurPx}px)`);
+
+      // ✅ 如果挤出过，就加真实投影
+      if (st.sideOn) {
+        parts.push("drop-shadow(0 14px 26px rgba(0,0,0,.55))");
+      }
+
+      st.el.style.filter = parts.length ? parts.join(" ") : "none";
+    }
+
+    // iOS 稳定：先把 video 当前帧画到 canvas，再送进 MediaPipe
+    const mpFrameCanvas = document.createElement("canvas");
+    const mpFrameCtx = mpFrameCanvas.getContext("2d", { willReadFrequently: true });
+
+    function getVideoFrameCanvas(){
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (!vw || !vh) return null;
+
+    if (mpFrameCanvas.width !== vw || mpFrameCanvas.height !== vh){
+        mpFrameCanvas.width = vw;
+        mpFrameCanvas.height = vh;
+    }
+    mpFrameCtx.drawImage(video, 0, 0, vw, vh);
+    return mpFrameCanvas;
+    }
+
+
+    function showROI(rect){
+      roiBox.style.display = "block";
+      roiBox.style.left = rect.x + "px";
+      roiBox.style.top  = rect.y + "px";
+      roiBox.style.width  = rect.w + "px";
+      roiBox.style.height = rect.h + "px";
+    }
+    function hideROI(){ roiBox.style.display = "none"; }
+
+    function updateRoiGridPreview(){
+      if (!roiGrid || !pendingGridRect) return;
+
+      const rows = parseInt(gridRowsEl.value, 10) || 1;
+      const cols = parseInt(gridColsEl.value, 10) || 1;
+
+      const cellW = pendingGridRect.w / cols;
+      const cellH = pendingGridRect.h / rows;
+
+      roiGrid.style.setProperty("--cellW", cellW + "px");
+      roiGrid.style.setProperty("--cellH", cellH + "px");
+    }
+
+    function showRoiGridPreview(on){
+      if (!roiGrid) return;
+      roiGrid.style.display = on ? "block" : "none";
+    }
+
+
+    function cssRectToVideoCrop(cssRect){
+      const vw = video.videoWidth, vh = video.videoHeight;
+      if (!vw || !vh) return null;
+
+      const sr = stage.getBoundingClientRect();
+      const sw = sr.width, sh = sr.height;
+      const videoAspect = vw / vh;
+      const stageAspect = sw / sh;
+
+      let drawW, drawH, offsetX, offsetY;
+      if (stageAspect > videoAspect) {
+        // ✅ stage 更宽：以高度为基准，左右留黑边
+        drawH = sh;
+        drawW = sh * videoAspect;
+        offsetY = 0;
+        offsetX = (sw - drawW) / 2;
+      } else {
+        // ✅ stage 更高：以宽度为基准，上下留黑边
+        drawW = sw;
+        drawH = sw / videoAspect;
+        offsetX = 0;
+        offsetY = (sh - drawH) / 2;
+      }
+
+      const isMirrored = (facingMode === "user");
+
+      let nx = (cssRect.x - offsetX) / drawW;
+      const ny = (cssRect.y - offsetY) / drawH;
+      const nw = cssRect.w / drawW;
+      const nh = cssRect.h / drawH;
+
+      if (isMirrored) nx = 1 - nx - nw;
+
+      let sx = Math.round(nx * vw);
+      let sy = Math.round(ny * vh);
+      let swp = Math.round(nw * vw);
+      let shp = Math.round(nh * vh);
+
+      sx = clamp(sx, 0, vw-1);
+      sy = clamp(sy, 0, vh-1);
+      swp = clamp(swp, 1, vw - sx);
+      shp = clamp(shp, 1, vh - sy);
+
+      return { sx, sy, sw: swp, sh: shp };
+    }
+
+    function addStickerFromCanvas(srcCanvas, cssRect){
+      const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+
+      const stCanvas = document.createElement("canvas");
+      stCanvas.className = "sticker";
+      stCanvas.style.left = cssRect.x + "px";
+      stCanvas.style.top  = cssRect.y + "px";
+      stCanvas.style.width  = cssRect.w + "px";
+      stCanvas.style.height = cssRect.h + "px";
+
+      stCanvas.width  = Math.round(cssRect.w * dpr);
+      stCanvas.height = Math.round(cssRect.h * dpr);
+
+      const ctx = stCanvas.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(srcCanvas, 0,0, stCanvas.width, stCanvas.height);
+
+      stage.appendChild(stCanvas);
+
+      const st = { el: stCanvas, x: cssRect.x, y: cssRect.y, w: cssRect.w, h: cssRect.h, scale: 1, rot: 0,
+      blurPx: 0 ,
+      vx: 0, vy: 0, av: 0, _physLock: false
+
+      };
+      stickers.push(st);
+
+      applyStickerCssFilter(st);   // ⭐⭐⭐ 关键
+
+      attachStickerInteractions(st);
+      selectSticker(st);
+    }
+
+    function alphaHitTest(canvasEl, clientX, clientY){
+      const r = canvasEl.getBoundingClientRect();
+      const d = canvasEl.width / r.width;
+      const px = (clientX - r.left) * d;
+      const py = (clientY - r.top) * d;
+      if (px < 0 || py < 0 || px >= canvasEl.width || py >= canvasEl.height) return false;
+      const a = canvasEl.getContext("2d").getImageData(px|0, py|0, 1, 1).data[3];
+      return a !== 0;
+    }
+
+    function getLocalPointOnCanvas(canvasEl, clientX, clientY){
+      const r = canvasEl.getBoundingClientRect();
+      if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
+      const x = (clientX - r.left) / r.width * canvasEl.width;
+      const y = (clientY - r.top) / r.height * canvasEl.height;
+      return { x, y };
+    }
+
+    function attachStickerInteractions(st){
+      const el = st.el;
+
+      let isDown = false;
+      let startX=0, startY=0;
+      let baseLeft=0, baseTop=0;
+      let moved = false;
+      const DRAG_THRESHOLD = 6;
+      let lastLocal = null;
+
+      el.addEventListener("pointerdown", (e)=>{
+        if (!alphaHitTest(el, e.clientX, e.clientY)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        isDown = true;
+        moved = false;
+
+        startX = e.clientX;
+        startY = e.clientY;
+        baseLeft = st.x;
+        baseTop  = st.y;
+
+        selectSticker(st);
+
+        // ✅ gravity/physics: dragging locks physics
+        st._physLock = true;
+        st.vx = st.vy = st.av = 0;
+
+        if (editbar.style.display === "flex") {
+          lastLocal = getLocalPointOnCanvas(el, e.clientX, e.clientY);
+
+          const ctx = el.getContext("2d");
+          const snap = ctx.getImageData(0,0, el.width, el.height);
+          paintUndoStack.push(snap);
+          if (paintUndoStack.length > 14) paintUndoStack.shift();
+        } else {
+          lastLocal = null;
+        }
+
+        el.setPointerCapture(e.pointerId);
+      }, { passive:false });
+
+      el.addEventListener("pointermove", (e)=>{
+        if (!isDown || selected !== st) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const dist = Math.hypot(dx, dy);
+
+        if (editbar.style.display !== "flex") {
+          if (dist > DRAG_THRESHOLD) moved = true;
+          if (!moved) return;
+
+          st.x = baseLeft + dx;
+          st.y = baseTop  + dy;
+          el.style.left = st.x + "px";
+          el.style.top  = st.y + "px";
+          e.preventDefault();
+          return;
+        }
+
+// ===== edit mode painting =====
+const local = getLocalPointOnCanvas(el, e.clientX, e.clientY);
+if (!local) return;
+
+const radius = parseInt(radiusEl.value, 10);
+
+// strength slider -> 0..1
+const s = Math.abs(parseInt(strengthEl.value, 10)) / 100;
+
+if (editMode === "stretch"){
+  const base = parseInt(strengthEl.value, 10) / 100;
+  const strength = Math.max(-1.25, Math.min(1.25, base * 1.35));
+
+  if (lastLocal){
+    const vx = local.x - lastLocal.x;
+    const vy = local.y - lastLocal.y;
+    applySmear(el, local.x, local.y, radius, vx, vy, strength);
+  }
+  lastLocal = local;
+  e.preventDefault();
+  return;
+}
+
+if (editMode === "mosaic"){
+  const blockSize = Math.round(4 + s * 36); // 4~40
+  applyMosaicBrush(el, local.x, local.y, radius, blockSize);
+  lastLocal = local;
+  e.preventDefault();
+  return;
+}
+
+if (editMode === "mblur"){
+  const blurPx = Math.round(2 + s * 22); // 2~24
+  applyLocalBlurBrush(el, local.x, local.y, radius, blurPx);
+  lastLocal = local;
+  e.preventDefault();
+  return;
+}
+      }, { passive:false });
+
+      const end = (e)=>{
+        isDown = false;
+        lastLocal = null;
+        moved = false;
+        try{ el.releasePointerCapture(e.pointerId); }catch{}
+        st._physLock = false; // ✅ release lock
+      };
+      el.addEventListener("pointerup", end);
+      el.addEventListener("pointercancel", end);
+    }
+
+    function applySmear(canvas, cx, cy, radius, vx, vy, strength){
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height;
+
+      const src = ctx.getImageData(0,0,w,h);
+      const dst = ctx.createImageData(w,h);
+      dst.data.set(src.data);
+
+      const r2 = radius * radius;
+
+      const x0 = Math.max(0, Math.floor(cx - radius));
+      const x1 = Math.min(w - 1, Math.ceil(cx + radius));
+      const y0 = Math.max(0, Math.floor(cy - radius));
+      const y1 = Math.min(h - 1, Math.ceil(cy + radius));
+
+      const len = Math.hypot(vx, vy) || 1;
+      const ux = vx / len;
+      const uy = vy / len;
+
+      const push = Math.min(36, len) * (0.9 + Math.abs(strength) * 1.3) * Math.sign(strength || 1);
+
+      for (let y = y0; y <= y1; y++){
+        for (let x = x0; x <= x1; x++){
+          const dx = x - cx, dy = y - cy;
+          const d2 = dx*dx + dy*dy;
+          if (d2 > r2) continue;
+
+          const d = Math.sqrt(d2);
+          const t = 1 - d / radius;
+          const falloff = t * t;
+
+          const sx = x - ux * push * falloff;
+          const sy = y - uy * push * falloff;
+
+          const ix = Math.max(0, Math.min(w - 1, Math.round(sx)));
+          const iy = Math.max(0, Math.min(h - 1, Math.round(sy)));
+
+          const si = (iy*w + ix)*4;
+          const di = (y*w + x)*4;
+
+          dst.data[di]     = src.data[si];
+          dst.data[di + 1] = src.data[si + 1];
+          dst.data[di + 2] = src.data[si + 2];
+          dst.data[di + 3] = src.data[si + 3];
+        }
+      }
+      ctx.putImageData(dst, 0,0);
+    }
+
+  // ===== Mosaic Brush (Square pixelate in local patch) =====
+  function applyMosaicBrush(canvas, cx, cy, radius, blockSizePx){
+    const ctx = canvas.getContext("2d", { willReadFrequently:true });
+    const w = canvas.width, h = canvas.height;
+
+    const r = Math.max(4, radius|0);
+    const bs = Math.max(2, blockSizePx|0);
+
+    const x0 = clamp((cx - r)|0, 0, w-1);
+    const y0 = clamp((cy - r)|0, 0, h-1);
+    const x1 = clamp((cx + r)|0, 0, w);
+    const y1 = clamp((cy + r)|0, 0, h);
+
+    const pw = Math.max(1, x1 - x0);
+    const ph = Math.max(1, y1 - y0);
+
+    const patch = ctx.getImageData(x0, y0, pw, ph);
+
+    const dw = Math.max(1, Math.round(pw / bs));
+    const dh = Math.max(1, Math.round(ph / bs));
+
+    const tmp1 = document.createElement("canvas");
+    tmp1.width = pw; tmp1.height = ph;
+    tmp1.getContext("2d").putImageData(patch, 0, 0);
+
+    const tmp2 = document.createElement("canvas");
+    tmp2.width = dw; tmp2.height = dh;
+    const t2 = tmp2.getContext("2d");
+    t2.imageSmoothingEnabled = true;
+    t2.clearRect(0,0,dw,dh);
+    t2.drawImage(tmp1, 0,0, pw,ph, 0,0, dw,dh);
+
+    const tmp3 = document.createElement("canvas");
+    tmp3.width = pw; tmp3.height = ph;
+    const t3 = tmp3.getContext("2d");
+    t3.imageSmoothingEnabled = false;
+    t3.clearRect(0,0,pw,ph);
+    t3.drawImage(tmp2, 0,0, dw,dh, 0,0, pw,ph);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);  // 圆形笔刷
+    // 方形笔刷就改成：ctx.rect(cx-r, cy-r, 2*r, 2*r);
+    ctx.clip();
+
+    ctx.drawImage(tmp3, x0, y0);
+    ctx.restore();
+  }
+
+  // ===== Local Blur Brush =====
+  function applyLocalBlurBrush(canvas, cx, cy, radius, blurPx){
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+
+    const r  = Math.max(6, radius|0);
+    const bp = clamp(blurPx|0, 1, 30);
+
+    const x0 = clamp((cx - r - 2)|0, 0, w-1);
+    const y0 = clamp((cy - r - 2)|0, 0, h-1);
+    const x1 = clamp((cx + r + 2)|0, 0, w);
+    const y1 = clamp((cy + r + 2)|0, 0, h);
+
+    const pw = Math.max(1, x1 - x0);
+    const ph = Math.max(1, y1 - y0);
+
+    const tmp = document.createElement("canvas");
+    tmp.width = pw; tmp.height = ph;
+    const tctx = tmp.getContext("2d");
+    tctx.drawImage(canvas, x0, y0, pw, ph, 0, 0, pw, ph);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    // 方形笔刷就改成：ctx.rect(cx-r, cy-r, 2*r, 2*r);
+    ctx.clip();
+
+    ctx.filter = `blur(${bp}px)`;
+    ctx.drawImage(tmp, x0, y0);
+
+    ctx.restore();
+  }
+
+
+    function pushUndoForSelected(){
+  if (!selected) return false;
+  const ctx = selected.el.getContext("2d");
+  const snap = ctx.getImageData(0,0, selected.el.width, selected.el.height);
+  paintUndoStack.push(snap);
+  if (paintUndoStack.length > 14) paintUndoStack.shift();
+  return true;
+}
+
+// 快速模糊：用 ctx.filter（性能好，iOS 也支持）
+function applyGaussianBlur(px){
+  if (!selected) return;
+  if (!pushUndoForSelected()) return;
+
+  const c = selected.el;
+  const ctx = c.getContext("2d");
+  const tmp = document.createElement("canvas");
+  tmp.width = c.width;
+  tmp.height = c.height;
+
+  const tctx = tmp.getContext("2d");
+  tctx.clearRect(0,0,tmp.width,tmp.height);
+  tctx.drawImage(c, 0,0);
+
+  ctx.save();
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.filter = `blur(${px}px)`;
+  ctx.drawImage(tmp, 0,0);
+  ctx.restore();
+}
+
+function applyBlackWhite(){
+  if (!selected) return;
+  if (!pushUndoForSelected()) return;
+
+  const c = selected.el;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  const img = ctx.getImageData(0,0,c.width,c.height);
+  const d = img.data;
+
+  for (let i=0; i<d.length; i+=4){
+    const a = d[i+3];
+    if (a === 0) continue;
+    const r = d[i], g = d[i+1], b = d[i+2];
+    // 更接近人眼的灰度
+    const y = (0.2126*r + 0.7152*g + 0.0722*b) | 0;
+    d[i] = d[i+1] = d[i+2] = y;
+  }
+  ctx.putImageData(img, 0,0);
+}
+
+    // amount: 0~1，建议 0.1~0.35
+    function applyNoise(amount){
+      if (!selected) return;
+      if (!pushUndoForSelected()) return;
+
+      const c = selected.el;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      const img = ctx.getImageData(0,0,c.width,c.height);
+      const d = img.data;
+
+      const amp = Math.max(0, Math.min(1, amount)) * 255;
+
+      for (let i=0; i<d.length; i+=4){
+        const a = d[i+3];
+        if (a === 0) continue;
+        const n = (Math.random()*2 - 1) * amp;
+        d[i]   = clamp(d[i]   + n, 0, 255);
+        d[i+1] = clamp(d[i+1] + n, 0, 255);
+        d[i+2] = clamp(d[i+2] + n, 0, 255);
+      }
+      ctx.putImageData(img, 0,0);
+    }
+
+    function ensureCanvasPadding(st, padPx){
+      if (!st?.el || padPx <= 0) return;
+
+      const c = st.el;
+      const cssW = st.w;
+      const dpr = c.width / cssW;
+
+      const pad = Math.ceil(padPx * dpr);
+
+      const needW = c.width + pad * 2;
+      const needH = c.height + pad * 2;
+
+      const out = document.createElement("canvas");
+      out.className = "sticker";
+      out.width = needW;
+      out.height = needH;
+
+      out.style.left = c.style.left;
+      out.style.top  = c.style.top;
+      out.style.width  = (st.w + padPx * 2) + "px";
+      out.style.height = (st.h + padPx * 2) + "px";
+      out.style.transform = c.style.transform;
+      out.style.filter = c.style.filter;
+      out.style.borderRadius = c.style.borderRadius;
+      out.style.border = c.style.border;
+
+      const ctx = out.getContext("2d");
+      ctx.drawImage(c, pad, pad);
+
+      c.replaceWith(out);
+      st.el = out;
+
+      st.x -= padPx;
+      st.y -= padPx;
+      st.w += padPx * 2;
+      st.h += padPx * 2;
+
+      out.style.left = st.x + "px";
+      out.style.top  = st.y + "px";
+
+      attachStickerInteractions(st);
+
+      if (selected === st) out.classList.add("selected");
+    }
+
+    // ===== Edge -> Side Extrude =====
+
+    // 提取“边缘像素”canvas：只保留 alpha 边界的颜色
+    function buildEdgeCanvas(srcCanvas){
+      const w = srcCanvas.width, h = srcCanvas.height;
+      const sctx = srcCanvas.getContext("2d", { willReadFrequently: true });
+      const src = sctx.getImageData(0,0,w,h);
+      const sd = src.data;
+
+      const out = document.createElement("canvas");
+      out.width = w; out.height = h;
+      const octx = out.getContext("2d", { willReadFrequently: true });
+      const edge = octx.createImageData(w,h);
+      const ed = edge.data;
+
+      const A_TH = 8; // alpha 阈值：避免半透明噪点被当边缘
+
+      function alphaAt(x,y){
+        if (x<0||y<0||x>=w||y>=h) return 0;
+        return sd[(y*w + x)*4 + 3];
+      }
+
+      for (let y=0; y<h; y++){
+        for (let x=0; x<w; x++){
+          const i = (y*w + x)*4;
+          const a = sd[i+3];
+          if (a <= A_TH) continue;
+
+          // 4 邻域只要有一个是透明 => 这是边缘
+          const n0 = alphaAt(x-1,y) <= A_TH;
+          const n1 = alphaAt(x+1,y) <= A_TH;
+          const n2 = alphaAt(x,y-1) <= A_TH;
+          const n3 = alphaAt(x,y+1) <= A_TH;
+
+          if (n0 || n1 || n2 || n3){
+            ed[i]   = sd[i];
+            ed[i+1] = sd[i+1];
+            ed[i+2] = sd[i+2];
+            ed[i+3] = a; // 保留原 alpha
+          }
+        }
+      }
+
+      octx.putImageData(edge, 0,0);
+      return out;
+    }
+
+    function getEdgeAverageColor(srcCanvas){
+      const edge = buildEdgeCanvas(srcCanvas);
+      const ctx = edge.getContext("2d", { willReadFrequently:true });
+      const img = ctx.getImageData(0,0,edge.width,edge.height).data;
+
+      let r=0,g=0,b=0, wsum=0;
+      for (let i=0; i<img.length; i+=4){
+        const a = img[i+3];
+        if (a === 0) continue;
+        const w = a / 255;
+        r += img[i] * w;
+        g += img[i+1] * w;
+        b += img[i+2] * w;
+        wsum += w;
+      }
+      if (!wsum) return { r:180, g:180, b:180 }; // fallback
+      return { r: (r/wsum)|0, g:(g/wsum)|0, b:(b/wsum)|0 };
+    }
+
+    function snapshotStickerBase(st){
+      const c = st.el;
+      const base = document.createElement("canvas");
+      base.width = c.width;
+      base.height = c.height;
+      base.getContext("2d").drawImage(c, 0, 0);
+      st._sideBaseCanvas = base;          // ✅ 用 canvas 存快照
+    }
+
+    function restoreStickerBase(st){
+      const base = st?._sideBaseCanvas;
+      if (!base) return;
+      const c = st.el;
+      const ctx = c.getContext("2d");
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,c.width,c.height);  // ✅ 先清空，避免脏残留
+      ctx.drawImage(base, 0, 0);
+    }
+
+function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false){
+  if (!selected) return;
+
+  // 只有“正式 apply”才入 undo
+  if (!isPreview){
+    if (!pushUndoForSelected()) return;
+  }
+
+  // padding 只在“正式 apply”时做；preview 不要反复换 canvas
+  if (!isPreview){
+    const padCss = Math.ceil(thickness * (Math.max(Math.abs(dx), Math.abs(dy)) + 1) + 6);
+    ensureCanvasPadding(selected, padCss);
+  }
+
+  const c = selected.el;
+  const w = c.width, h = c.height;
+
+  const base = document.createElement("canvas");
+  base.width = w; base.height = h;
+  base.getContext("2d").drawImage(c, 0, 0);
+
+  const edgeCol = getEdgeAverageColor(base);
+
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,w,h);
+
+  for (let i = thickness; i >= 1; i--){
+    const ox = i * dx;
+    const oy = i * dy;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.drawImage(base, ox, oy);
+
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.drawImage(base, 0, 0);
+
+    const t = i / thickness;
+    
+    //平均色
+    //ctx.globalCompositeOperation = "source-atop";
+    //ctx.fillStyle = `rgba(${edgeCol.r},${edgeCol.g},${edgeCol.b},${0.20 + 0.30*t})`;
+    //ctx.fillRect(ox, oy, w, h);
+
+    if (darken > 0){
+      ctx.globalCompositeOperation = "source-atop";
+    //ctx.fillStyle = `rgba(0,0,0,${darken * (0.06 + 0.18*t)})`;
+      
+      ctx.fillStyle = `rgba(0,0,0,${(darken / thickness) * (0.06 + 0.18*t)})`;
+      ctx.fillRect(ox, oy, w, h);
+    }
+
+    ctx.restore();
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.drawImage(base, 0, 0);
+
+  selected.sideOn = true;
+  applyStickerCssFilter(selected);
+}
+
+    stage.addEventListener("touchstart", (e)=>{
+      if (!selected) return;
+      if (e.touches.length === 2){
+        e.preventDefault();
+        const t1 = e.touches[0], t2 = e.touches[1];
+        const dx = t2.clientX - t1.clientX;
+        const dy = t2.clientY - t1.clientY;
+        gesture.active = true;
+        gesture.startDist = Math.hypot(dx,dy);
+        gesture.startAng  = Math.atan2(dy,dx);
+        gesture.baseScale = selected.scale;
+        gesture.baseRot   = selected.rot;
+      }
+    }, { passive:false });
+
+    stage.addEventListener("touchmove", (e)=>{
+      if (!gesture.active || !selected) return;
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+
+      const t1 = e.touches[0], t2 = e.touches[1];
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+
+      const dist = Math.hypot(dx,dy);
+      const ang  = Math.atan2(dy,dx);
+
+      const scale = gesture.baseScale * (dist / Math.max(1, gesture.startDist));
+      const rot   = gesture.baseRot + (ang - gesture.startAng);
+
+      selected.scale = clamp(scale, 0.2, 6);
+      selected.rot = rot;
+      applyTransform(selected);
+    }, { passive:false });
+
+    stage.addEventListener("touchend", ()=>{ gesture.active = false; });
+    stage.addEventListener("touchcancel", ()=>{ gesture.active = false; });
+
+    // ✅ tap 判定：避免轻微移动造成混乱
+    let stageTap = { down:false, x:0, y:0, id:null };
+    const TAP_MOVE_THRESHOLD = 10;
+
+    stage.addEventListener("pointerdown", (e)=>{
+    if (e.target.closest("#sidebar")) return; 
+      if (
+        e.target.closest(".topbar") ||
+        e.target.closest("#editbar") ||
+        e.target.closest("#gridbar") ||  
+        e.target.closest("#libPanel")
+      ) return;
+
+      if (!video.srcObject) { showHint("先点 Start Camera", 900); return; }
+
+      if (e.target.closest(".sticker")) return;
+
+      if (editbar.style.display === "flex") {
+        editbar.style.display = "none";
+        paintUndoStack = [];
+        showHint("exit Edit", 800);
+        return;
+      }
+      // ---- MAGNET MODE (v2: hand-draw) ----
+      if (captureMode === "magnet"){
+        e.preventDefault();
+
+        fieldDrawing = true;
+        fieldPts = [];
+
+        const p = localPointFromClient(e.clientX, e.clientY);
+        fieldPts.push({ x:p.x, y:p.y });
+
+        // 先画一个 draft
+        const kind = (btnMagnetShape.textContent.trim() === "PATH") ? "path" : "loop";
+        drawFieldOverlay(fieldPts, kind, btnMagnetBind.textContent.trim());
+        return;
+      }
+      stageTap.down = true;
+      stageTap.x = e.clientX;
+      stageTap.y = e.clientY;
+      stageTap.id = e.pointerId;
+
+      if (captureMode !== "mp"){
+        e.preventDefault();
+        pointerDown = true;
+
+        const p = localPointFromClient(e.clientX, e.clientY);
+        startPt = p;
+
+        roi = { x:p.x, y:p.y, w:1, h:1 };
+        path = [ {x:p.x, y:p.y} ];
+
+        showROI(roi);
+        if (captureMode === "draw") drawPathPreview(path);
+      }
+    }, { passive:false });
+
+    stage.addEventListener("pointermove", (e)=>{
+      // ---- MAGNET MODE DRAW (v2) ----
+      if (captureMode === "magnet" && fieldDrawing){
+        e.preventDefault();
+
+        const p = localPointFromClient(e.clientX, e.clientY);
+        const last = fieldPts[fieldPts.length - 1];
+
+        // 采样间隔：防止点太密
+        if (!last || Math.hypot(p.x-last.x, p.y-last.y) > 3){
+          fieldPts.push({ x:p.x, y:p.y });
+        }
+
+        const kind = (btnMagnetShape.textContent.trim() === "PATH") ? "path" : "loop";
+        drawFieldOverlay(fieldPts, kind, btnMagnetBind.textContent.trim());
+        return;
+      }
+      if (!pointerDown || !startPt) return;
+      e.preventDefault();
+
+      const p = localPointFromClient(e.clientX, e.clientY);
+
+      if (captureMode === "rect" || captureMode === "grid"){
+        const x = Math.min(startPt.x, p.x);
+        const y = Math.min(startPt.y, p.y);
+        const w = Math.abs(p.x - startPt.x);
+        const h = Math.abs(p.y - startPt.y);
+        roi = {
+          x: clamp(x, 0, startPt.W-1),
+          y: clamp(y, 0, startPt.H-1),
+          w: clamp(w, 1, startPt.W),
+          h: clamp(h, 1, startPt.H)
+        };
+        showROI(roi);
+      } else if (captureMode === "draw"){
+        path.push({x:p.x, y:p.y});
+        let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+        for (const pt of path){
+          minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+          maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+        }
+        roi = { x:minX, y:minY, w:(maxX-minX), h:(maxY-minY) };
+        showROI(roi);
+        drawPathPreview(path);
+      }
+    }, { passive:false });
+
+    stage.addEventListener("pointerup", async (e)=>{
+      // ✅ MP：pointerup 做 tap 判定 -> 触发分割
+      if (captureMode === "mp"){
+        if (stageTap.down && e.pointerId === stageTap.id){
+          const dx = e.clientX - stageTap.x;
+          const dy = e.clientY - stageTap.y;
+          const moved = Math.hypot(dx,dy) > TAP_MOVE_THRESHOLD;
+          stageTap.down = false;
+
+          if (!moved){
+            await handleMediaPipeTap(e);
+          }
+        }
+        return;
+      }
+
+      // ---- MAGNET MODE APPLY (v2: create field + docks) ----
+      if (captureMode === "magnet"){
+        if (!fieldDrawing) return;
+        e.preventDefault();
+        fieldDrawing = false;
+
+        // 点太少：取消
+        if (fieldPts.length < 8){
+          fieldPts = [];
+          clearFieldOverlay();
+          showHint("too short", 700);
+          return;
+        }
+
+        const kindText = btnMagnetShape.textContent.trim(); // LOOP / PATH
+        const kind = (kindText === "PATH") ? "path" : "loop";
+
+        // bind：LOOP -> IN/OUT；PATH -> ON
+        let bind = "on";
+        if (kind === "loop"){
+          bind = (btnMagnetBind.textContent.trim() === "OUT") ? "out" : "in";
+        } else {
+          btnMagnetBind.textContent = "ON";
+          bind = "on";
+        }
+
+        // LOOP：强制闭合（把起点补到末尾）
+        if (kind === "loop"){
+          const a = fieldPts[0], b = fieldPts[fieldPts.length - 1];
+          if (Math.hypot(a.x-b.x, a.y-b.y) > 10){
+            fieldPts.push({ x:a.x, y:a.y });
+          }
+        }
+
+        field = {
+          kind,
+          bind,
+          pts: fieldPts.slice(),
+          docks: new Map(),
+          strength: 980,
+          swirl: 2.4,
+          damping: 0.86
+        };
+
+        // ✅ 强绑定：给每个 sticker 分配 dock 点（严格 in/out/on）
+        assignDocksForField();
+
+        // ✅ 场持久显示：保留在 magnetPreview 上
+        drawFieldOverlay(field.pts, field.kind, btnMagnetBind.textContent.trim());
+
+        // ✅ 即使 Gravity OFF，也要让它动起来
+        startGravityLoop();
+
+        showHint(kind === "loop" ? ("FIELD " + btnMagnetBind.textContent.trim()) : "FIELD ON PATH", 900);
+        return;
+      }
+
+      // RECT/DRAW：原逻辑
+      if (!pointerDown) return;
+      e.preventDefault();
+      pointerDown = false;
+
+      if (!roi || roi.w < 8 || roi.h < 8){
+        hideROI();
+        roi = null; path = []; startPt = null;
+        clearPathPreview();
+        return;
+      }
+
+    if (captureMode === "grid"){
+      pendingGridRect = { ...roi };
+      gridbar.style.display = "flex";
+
+      showRoiGridPreview(true);
+      updateRoiGridPreview();
+
+      console.log("GRID branch fired. display =", getComputedStyle(gridbar).display);
+
+
+      showHint("设置行列后点 done", 900);
+      // GRID 这里先不 hideROI，让你看到外框
+    } else if (captureMode === "rect"){
+      await createStickerFromROI(roi, null);
+      hideROI();
+    } else if (captureMode === "draw"){
+      await createStickerFromROI(roi, (path.length>=2 ? path : null));
+      hideROI();
+    }
+
+
+    if (captureMode !== "grid"){
+      roi = null; path = []; startPt = null;
+      clearPathPreview();
+    } else {
+      // GRID：保留 roiBox 外框，等 done/cancel
+      roi = null; path = []; startPt = null;
+      clearPathPreview();
+    }
+
+    }, { passive:false });
+
+    stage.addEventListener("pointercancel", ()=>{
+      stageTap.down = false;
+      pointerDown = false;
+      hideROI();
+      roi = null; path = []; startPt = null;
+      clearPathPreview();
+    });
+
+    async function createStickerFromROI(rect, pathPoints){
+      const crop = cssRectToVideoCrop(rect);
+      if (!crop) return;
+
+      const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+      const src = document.createElement("canvas");
+      src.width  = Math.round(rect.w * dpr);
+      src.height = Math.round(rect.h * dpr);
+      const ctx = src.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.clearRect(0,0,src.width, src.height);
+
+      if (pathPoints && pathPoints.length >= 2){
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.beginPath();
+        ctx.moveTo(pathPoints[0].x - rect.x, pathPoints[0].y - rect.y);
+        for (const p of pathPoints) ctx.lineTo(p.x - rect.x, p.y - rect.y);
+        ctx.closePath();
+        ctx.clip();
+
+        const frameCanvas = getVideoFrameCanvas();
+        if (!frameCanvas){ showHint("视频未就绪", 900); return; }
+        ctx.drawImage(frameCanvas, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, rect.w, rect.h);
+        ctx.restore();
+      } else {
+        const frameCanvas = getVideoFrameCanvas();
+        if (!frameCanvas){ showHint("视频未就绪", 900); return; }
+        ctx.drawImage(frameCanvas, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, src.width, src.height);
+      }
+
+      addStickerFromCanvas(src, rect);
+      showHint("done", 1200);
+    }
+
+    async function createGridFromROI(rect, rows, cols){
+  const crop = cssRectToVideoCrop(rect);
+  if (!crop) return;
+
+  // 用视频真实像素裁切（最稳）
+  const frameCanvas = getVideoFrameCanvas();
+  if (!frameCanvas){
+    showHint("视频未就绪", 900);
+    return;
+  }
+
+  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 3));
+
+  // 先把“大框”整块画出来（像你 rect 截取那样）
+  const big = document.createElement("canvas");
+  big.width  = Math.round(rect.w * dpr);
+  big.height = Math.round(rect.h * dpr);
+
+  const bctx = big.getContext("2d");
+  bctx.imageSmoothingEnabled = true;
+  bctx.clearRect(0,0,big.width,big.height);
+
+  // 从 frameCanvas 上裁切 crop（crop 是视频像素坐标）
+  // frameCanvas 的尺寸就是 video.videoWidth/Height
+  bctx.drawImage(
+    frameCanvas,
+    crop.sx, crop.sy, crop.sw, crop.sh,
+    0, 0, big.width, big.height
+  );
+
+  // 计算每个 cell 的 css 尺寸
+  const cellW = rect.w / cols;
+  const cellH = rect.h / rows;
+
+  // 每个 cell 在 big canvas 上的像素尺寸
+  const cellPW = big.width / cols;
+  const cellPH = big.height / rows;
+
+  const gid = "grid_" + (gridGroupSeq++);
+  const group = {
+    id: gid,
+    rect: { ...rect },
+    rows, cols,
+    cells: [],          // 每个 cell 的“槽位”坐标
+    pieces: []          // sticker 对象引用
+  };
+
+  // 预先算好每个槽位的位置
+  for (let r=0; r<rows; r++){
+    for (let c=0; c<cols; c++){
+      group.cells.push({
+        x: rect.x + c * cellW,
+        y: rect.y + r * cellH,
+        w: cellW,
+        h: cellH
+      });
+    }
+  }
+
+  // 生成碎片
+  for (let r=0; r<rows; r++){
+    for (let c=0; c<cols; c++){
+      const src = document.createElement("canvas");
+      src.width = Math.max(1, Math.round(cellPW));
+      src.height = Math.max(1, Math.round(cellPH));
+      const sctx = src.getContext("2d");
+      sctx.clearRect(0,0,src.width,src.height);
+
+      // 从 big canvas 上切片
+      sctx.drawImage(
+        big,
+        c * cellPW, r * cellPH, cellPW, cellPH,
+        0, 0, src.width, src.height
+      );
+
+      // 放置到对应格子槽位（css 坐标）
+      const slot = group.cells[r*cols + c];
+      addStickerFromCanvas(src, { x: slot.x, y: slot.y, w: slot.w, h: slot.h });
+
+      // 取到刚刚 push 的最后一个 sticker
+      const st = stickers[stickers.length - 1];
+      st.groupId = gid;
+      st.slotIndex = r*cols + c;
+      st.inGrid = true;
+
+      // 让碎片“像拼图一样更像网格”
+      st.el.style.borderRadius = "0px";
+
+      group.pieces.push(st);
+    }
+  }
+
+  gridGroups.push(group);
+  showHint(`GRID done (${rows}×${cols})，摇一摇洗牌`, 1400);
+}
+
+
+    // =========================
+    // ✅ MP：永远保留你点到的物体（自动判断需不需要反转）
+    // =========================
+    async function handleMediaPipeTap(e){
+    e.preventDefault?.();
+    if (!interactiveSegmenter) { showHint("模型未就绪", 800); return; }
+    if (isProcessing) return;
+
+    const vRect = video.getBoundingClientRect();
+    const { cx: clientX, cy: clientY } = getClientXY(e);
+    if (clientX == null || clientY == null) return;
+
+    console.log("tap event", e.type, "client", clientX, clientY);
+    console.log("video ready", video.videoWidth, video.videoHeight, "seg", !!interactiveSegmenter);
+
+    // 点击必须落在视频可视区域内
+    if (clientX < vRect.left || clientX > vRect.right || clientY < vRect.top || clientY > vRect.bottom) return;
+
+    isProcessing = true;
+    try{
+    // 点击点在 video DOM（object-fit:cover 的可视区域）内的归一化坐标
+    const relativeX = (clientX - vRect.left) / vRect.width;
+    const relativeY = (clientY - vRect.top) / vRect.height;
+    console.log("relative", relativeX, relativeY);
+
+    const result = await new Promise(resolve => {
+    const frameCanvas = getVideoFrameCanvas();
+    if (!frameCanvas){
+    showHint("视频未就绪（等相机画面出现再点）", 900);
+    isProcessing = false;
+    return;
+    }
+
+    interactiveSegmenter.segment(
+    frameCanvas,
+    { keypoint: { x: relativeX, y: relativeY } },
+    (r)=>resolve(r)
+    );
+
+    });
+
+    if (!result?.categoryMask){
+      showHint("没有得到 mask（换个点试试）", 900);
+      isProcessing = false;
+      return;
+    }
+
+    // ✅ 使用视频“真实像素尺寸”，不是屏幕尺寸
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+
+    // 把当前帧画到 fullCanvas 上（与 mask 同分辨率）
+    const fullCanvas = document.createElement("canvas");
+    fullCanvas.width = vw;
+    fullCanvas.height = vh;
+    const fctx = fullCanvas.getContext("2d", { willReadFrequently: true });
+    fctx.drawImage(video, 0, 0, vw, vh);
+
+    // 读像素
+    const frameData = fctx.getImageData(0, 0, vw, vh);
+    const rgba = frameData.data;
+
+    // 读 mask
+    const maskData = result.categoryMask.getAsFloat32Array();
+
+    // ✅ 判断 mask 类型：有些设备给 0/1（像 uint8），有些给 0~1（float）
+    let isUintMask = true;
+    for (let k = 0; k < 40 && k < maskData.length; k++){
+      const v = maskData[k];
+      if (v !== 0 && v !== 1) { isUintMask = false; break; }
+    }
+
+    const TH = 0.4;
+
+    const isMasked = (idx) => {
+      const v = maskData[idx];
+      return isUintMask ? (v > 0) : (v >= TH);
+    };
+
+    // ✅ 用“点击点”决定保留哪一类（前景/背景）
+    const mx = Math.max(0, Math.min(vw - 1, Math.floor(relativeX * vw)));
+    const my = Math.max(0, Math.min(vh - 1, Math.floor(relativeY * vh)));
+    const mi = my * vw + mx;
+
+    const clickedClass = isMasked(mi);
+    console.log("mask clicked:", maskData[mi], "isUint:", isUintMask, "clickedClass:", clickedClass);
+
+    // 只保留跟 clickedClass 相同的像素
+    for (let i = 0; i < vw * vh; i++){
+      if (isMasked(i) !== clickedClass) rgba[i*4 + 3] = 0;
+    }
+    fctx.putImageData(frameData, 0, 0);
+
+    // trim 到非透明边界，得到“物体本体”canvas
+    const trimmed = trimCanvas(fullCanvas);
+    if (!trimmed){
+      showHint("抠图为空", 900);
+      isProcessing = false;
+      return;
+    }
+
+    // ✅ 把“视频像素坐标”映射回舞台（object-fit:cover）
+    const sw = stage.clientWidth, sh = stage.clientHeight;
+    const videoAspect = vw / vh;
+    const stageAspect = sw / sh;
+
+    let drawW, drawH, offsetX, offsetY;
+    if (stageAspect > videoAspect) {
+      // ✅ stage 更宽：以高度为基准，左右留黑边
+      drawH = sh;
+      drawW = sh * videoAspect;
+      offsetY = 0;
+      offsetX = (sw - drawW) / 2;
+    } else {
+      // ✅ stage 更高：以宽度为基准，上下留黑边
+      drawW = sw;
+      drawH = sw / videoAspect;
+      offsetX = 0;
+      offsetY = (sh - drawH) / 2;
+    }
+
+    let nx = Number(trimmed.dataset.originX) / vw;
+    const ny = Number(trimmed.dataset.originY) / vh;
+    const nw = trimmed.width / vw;
+    const nh = trimmed.height / vh;
+
+    // 前置镜像要反过来
+    if (facingMode === "user"){
+      nx = 1 - nx - nw;
+    }
+
+    const cssRect = {
+      x: offsetX + nx * drawW,
+      y: offsetY + ny * drawH,
+      w: nw * drawW,
+      h: nh * drawH
+    };
+
+    addStickerFromCanvas(trimmed, cssRect);
+    showHint("done", 1300);
+
+  } catch(err){
+    console.error(err);
+    showHint("分割出错（可能网络/模型/权限）", 1200);
+  }
+  isProcessing = false;
+}
+
+
+    function trimCanvas(c){
+      const ctx = c.getContext("2d");
+      const pixels = ctx.getImageData(0,0,c.width,c.height);
+      const l = pixels.data.length;
+      let bound = { top:null, left:null, right:null, bottom:null };
+      let x,y;
+
+      for (let i=0;i<l;i+=4){
+        if (pixels.data[i+3] !== 0){
+          x = (i/4) % c.width;
+          y = ~~((i/4) / c.width);
+          if (bound.top === null) bound.top = y;
+          if (bound.left === null) bound.left = x;
+          else if (x < bound.left) bound.left = x;
+
+          if (bound.right === null) bound.right = x;
+          else if (bound.right < x) bound.right = x;
+
+          if (bound.bottom === null) bound.bottom = y;
+          else if (bound.bottom < y) bound.bottom = y;
+        }
+      }
+      if (bound.top === null) return null;
+
+      const trimW = bound.right - bound.left + 1;
+      const trimH = bound.bottom - bound.top + 1;
+
+      const out = document.createElement("canvas");
+      out.width = trimW;
+      out.height = trimH;
+      out.getContext("2d").drawImage(c, bound.left, bound.top, trimW, trimH, 0,0, trimW, trimH);
+
+      out.dataset.originX = bound.left;
+      out.dataset.originY = bound.top;
+      return out;
+    }
+    
+async function refreshLibraryUI(){
+  const items = await loadLibrary();
+  libList.innerHTML = "";
+
+  if (!items.length){
+    libList.innerHTML = `<div class="small" style="opacity:.7;">(empty)</div>`;
+    return;
+  }
+
+  items.forEach((it, idx)=>{
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+
+    const img = document.createElement("img");
+    img.className = "thumb";
+    img.src = it.image_url || it.dataURL;
+    img.title = `#${idx+1}`;
+    img.addEventListener("click", ()=>{
+      addStickerFromDataURL(it.image_url || it.dataURL, it.w, it.h);
+    });
+
+    const meta = document.createElement("div");
+    meta.className = "small";
+    meta.style.opacity = "0.78";
+    meta.style.marginTop = "4px";
+
+    if (it.geo?.lat != null){
+      meta.textContent = `${it.geo.lat.toFixed(5)}, ${it.geo.lng.toFixed(5)}  ±${Math.round(it.geo.accuracy_m || 0)}m`;
+    } else {
+      meta.textContent = `(no location)`;
+    }
+
+    wrap.appendChild(img);
+    wrap.appendChild(meta);
+    libList.appendChild(wrap);
+  });
+}
+
+async function openArchive(){
+  archiveOverlay.style.display = "block";
+  await renderArchiveGrid();
+}
+
+function closeArchive(){
+  archiveOverlay.style.display = "none";
+}
+
+async function renderArchiveGrid(){
+  const items = await loadLibrary();
+  archiveGrid.innerHTML = "";
+
+  if (!items.length){
+    archiveGrid.innerHTML = `<div class="small" style="opacity:.75;">(empty)</div>`;
+    return;
+  }
+
+  items.forEach((it, idx)=>{
+    const cell = document.createElement("div");
+    cell.style.border = "1px solid rgba(255,255,255,.12)";
+    cell.style.borderRadius = "14px";
+    cell.style.overflow = "hidden";
+    cell.style.background = "rgba(255,255,255,.06)";
+    cell.style.width = "fit-content";
+    cell.style.display = "flex";
+    cell.style.flexDirection = "column";
+
+    const img = document.createElement("img");
+    img.src = it.image_url || it.dataURL;
+
+    const iw = Math.max(60, Math.round(it.w || 160));
+    const ih = Math.max(60, Math.round(it.h || 120));
+    img.style.width = iw + "px";
+    img.style.height = ih + "px";
+    img.style.display = "block";
+    img.style.cursor = "pointer";
+    img.style.background = "#000";
+    img.style.objectFit = "contain";
+    img.style.borderRadius = "12px";
+
+    img.addEventListener("click", ()=>{
+      addStickerFromDataURL(it.image_url || it.dataURL, it.w, it.h);
+      showHint("placed", 650);
+    });
+
+    const meta = document.createElement("div");
+    meta.className = "small";
+    meta.style.padding = "7px 9px";
+    meta.style.opacity = "0.86";
+    meta.style.display = "flex";
+    meta.style.justifyContent = "space-between";
+    meta.style.gap = "8px";
+
+    const left = document.createElement("span");
+    left.textContent = `#${idx+1}`;
+
+    const right = document.createElement("span");
+    if (it.geo?.lat != null){
+      right.textContent = `±${Math.round(it.geo.accuracy_m || 0)}m`;
+    } else {
+      right.textContent = `no location`;
+    }
+
+    meta.appendChild(left);
+    meta.appendChild(right);
+
+    cell.appendChild(img);
+    cell.appendChild(meta);
+    archiveGrid.appendChild(cell);
+  });
+}
+
+    async function addStickerFromDataURL(dataURL, w, h){
+      const img = new Image();
+      img.src = dataURL;
+      await img.decode().catch(()=>{});
+
+      const rect = stage.getBoundingClientRect();
+      const targetW = clamp(w || 160, 60, rect.width * 0.8);
+      const targetH = clamp(h || 120, 60, rect.height* 0.8);
+
+      const x = (rect.width - targetW)/2;
+      const y = (rect.height - targetH)/2;
+
+      const src = document.createElement("canvas");
+      src.width = img.naturalWidth || 512;
+      src.height = img.naturalHeight || 512;
+      const ctx = src.getContext("2d");
+      ctx.drawImage(img, 0,0, src.width, src.height);
+
+      addStickerFromCanvas(src, { x, y, w: targetW, h: targetH });
+      showHint("已放回", 900);
+    }
+
+    function stickerToDataURL(st){
+      return st.el.toDataURL("image/png");
+    }
+
+    document.getElementById("btnStart").addEventListener("click", startCamera);
+
+    document.getElementById("btnFlip").addEventListener("click", async ()=>{
+      facingMode = (facingMode === "environment") ? "user" : "environment";
+      await startCamera();
+      showHint(facingMode === "user" ? "前置（镜像）" : "后置", 700);
+    });
+
+const btnGravity = document.getElementById("btnGravity");
+
+    const btnShuffleMode = document.getElementById("btnShuffleMode");
+
+    btnShuffleMode.addEventListener("click", async ()=>{
+      const next = !shuffleMode;
+
+      // 打开 Shuffle ON：此刻才请求 Motion 权限
+      if (next){
+        const ok = await ensureShakeReady();
+        if (!ok){
+          shuffleMode = false;
+          btnShuffleMode.textContent = "Shuffle OFF";
+          btnShuffleMode.classList.remove("active");
+          showHint("需要 Motion 权限才能摇一摇 Shuffle", 1200);
+          return;
+        }
+        showHint("Shuffle: shake to swap", 900);
+      }else{
+        showHint("Shuffle OFF", 700);
+      }
+
+      shuffleMode = next;
+      btnShuffleMode.textContent = shuffleMode ? "Shuffle ON" : "Shuffle OFF";
+      btnShuffleMode.classList.toggle("active", shuffleMode);
+    });
+
+btnGravity.addEventListener("click", async ()=>{
+  // 切到 ON
+  if (!gravityMode){
+    try{
+      const ok = await ensureTiltReady();
+      if (!ok){
+        showHint("Gravity permission denied", 1200);
+        return;
+      }
+
+      window.addEventListener("deviceorientation", onDeviceOrientation, true);
+
+      gravityMode = true;
+      btnGravity.textContent = "Gravity ON";
+      btnGravity.classList.add("active");
+      showHint("Gravity ON：倾斜手机推动碎片", 1200);
+
+      startGravityLoop();
+    }catch(e){
+      showHint("Gravity permission error", 1200);
+    }
+    return;
+  }
+
+  // 切到 OFF
+  gravityMode = false;
+  window.removeEventListener("deviceorientation", onDeviceOrientation, true);
+  btnGravity.textContent = "Gravity OFF";
+  btnGravity.classList.remove("active");
+  showHint("Gravity OFF", 800);
+});
+
+
+    // ===== 全局视频滤镜：事件绑定 =====
+    const btnVidBW   = document.getElementById("btnVidBW");
+    const btnVidBlur = document.getElementById("btnVidBlur");
+    const vidBlurEl  = document.getElementById("vidBlur");
+
+    btnVidBW.addEventListener("click", ()=>{
+    videoFx.bw = !videoFx.bw;
+    applyVideoFilter();
+    showHint(videoFx.bw ? "Video B&W ON" : "Video B&W OFF", 700);
+    });
+
+    btnVidBlur.addEventListener("click", ()=>{
+    videoFx.blur = !videoFx.blur;
+    if (videoFx.blur && videoFx.blurPx === 0) videoFx.blurPx = 6;
+    applyVideoFilter();
+    showHint(videoFx.blur ? `Video Blur ${videoFx.blurPx}px` : "Video Blur OFF", 700);
+    });
+
+    vidBlurEl.addEventListener("input", ()=>{
+    videoFx.blurPx = parseInt(vidBlurEl.value, 10) || 0;
+    videoFx.blur = videoFx.blurPx > 0;
+    applyVideoFilter();
+    });
+
+btnSave.addEventListener("click", async ()=>{
+  if (!selected) return;
+
+  try{
+    showHint("定位中…", 700);
+    const geo = await getGeoOnce();
+
+    showHint("上传中…", 700);
+    await uploadStickerToSupabase(selected, geo);
+
+    await refreshLibraryUI();
+    if (archiveOverlay.style.display === "block"){
+      await renderArchiveGrid();
+    }
+
+    if (geo) showHint(`saved ✓  ±${Math.round(geo.accuracy_m)}m`, 1000);
+    else showHint("saved (no location)", 900);
+  }catch(err){
+    console.error(err);
+    showHint("保存失败", 1200);
+  }
+});
+
+    btnEdit.addEventListener("click", ()=>{
+      if (!selected) return;
+      editbar.style.display = "flex";
+      paintUndoStack = [];
+      editMode = "stretch"; 
+      showHint("edit：拖动=拉伸；双指=旋转缩放；Done 退出；顶栏可切 Mosaic / M-Blur", 1300);
+    });
+
+    document.getElementById("btnFxBlur").addEventListener("click", ()=>{
+    if (!selected) return;
+
+    // 用 radius 滑块控制 CSS blur（iOS 稳定）
+    const px = Math.round(parseInt(radiusEl.value, 10) / 12); // 稍微更明显
+    selected.blurPx = clamp(px, 0, 16);
+
+    applyStickerCssFilter(selected);
+    showHint(`Blur ${selected.blurPx}px`, 650);
+    });
+
+
+    document.getElementById("btnFxBW").addEventListener("click", ()=>{
+    if (!selected) return;
+    applyBlackWhite();
+    showHint("B&W", 650);
+    });
+
+    document.getElementById("btnFxNoise").addEventListener("click", ()=>{
+    if (!selected) return;
+    // 用 strength 滑块当噪点强度（0~1）
+    const amt = Math.abs(parseInt(strengthEl.value, 10)) / 100; // 0~1
+    applyNoise(clamp(amt * 0.35, 0.05, 0.45));
+    showHint("Noise", 650);
+    });
+
+    // ===== Mosaic 工具 =====
+    const btnFxMBlur  = document.getElementById("btnFxMBlur");
+
+    btnFxMosaic.addEventListener("click", ()=>{
+      if (!selected) return;
+      editMode = "mosaic";
+      showHint("Mosaic brush：拖动涂抹方块马赛克", 900);
+    });
+
+    btnFxMBlur.addEventListener("click", ()=>{
+      if (!selected) return;
+      editMode = "mblur";
+      showHint("M-Blur brush：拖动涂抹局部模糊", 900);
+    });
+    
+    document.getElementById("btnFxSide").addEventListener("click", ()=>{
+      if (!selected) return;
+
+      const on = (sidebar.style.display !== "flex");
+      sidebar.style.display = on ? "flex" : "none";
+
+      if (on){
+        selected._sideBase = null;
+
+        // 60 是你的 max，方向最大偏移就用 2 兜底
+        const maxLen = parseInt(sideLenEl.max, 10) || 60;
+        ensureCanvasPadding(selected, 60 * 2 + 10);
+
+        snapshotStickerBase(selected);
+        previewSide();
+        showHint("Side controls", 700);
+      }else{
+        showHint("Side panel closed", 600);
+      }
+    });
+
+    document.getElementById("btnUndoPaint").addEventListener("click", ()=>{
+      if (!selected || paintUndoStack.length === 0) return;
+      const prev = paintUndoStack.pop();
+      const ctx = selected.el.getContext("2d");
+      ctx.putImageData(prev, 0, 0);
+      showHint("undo", 650);
+    });
+
+    document.getElementById("btnSideCancel").addEventListener("click", ()=>{
+      if (selected) restoreStickerBase(selected);
+      sidebar.style.display = "none";
+      showHint("cancel", 600);
+    });
+
+    document.getElementById("btnSideApply").addEventListener("click", ()=>{
+      if (!selected) return;
+      selected._sideBase = null;
+      sidebar.style.display = "none";
+      showHint("applied", 700);
+    });
+
+    document.getElementById("btnDone").addEventListener("click", ()=>{
+      editbar.style.display = "none";
+      paintUndoStack = [];
+      showHint("exit Edit", 800);
+    });
+
+document.getElementById("btnLibrary").addEventListener("click", async ()=>{
+  libPanel.style.display = (!libPanel.style.display || libPanel.style.display === "none") ? "block" : "none";
+  if (libPanel.style.display === "block"){
+    await refreshLibraryUI();
+  }
+});
+
+btnOpenArchive?.addEventListener("click", async ()=>{
+  await openArchive();
+});
+
+btnArcClose?.addEventListener("click", closeArchive);
+
+// 点击遮罩空白处也能关闭（更高级）
+archiveOverlay?.addEventListener("click", (e)=>{
+  if (e.target === archiveOverlay) closeArchive();
+});
+
+    document.getElementById("btnLibClose").addEventListener("click", ()=>{
+      libPanel.style.display = "none";
+    });
+
+document.getElementById("btnLibClear").addEventListener("click", async ()=>{
+  if (!confirm("Clear library?")) return;
+
+  try{
+    await clearLibraryFromSupabase();
+    await refreshLibraryUI();
+    if (archiveOverlay.style.display === "block"){
+      await renderArchiveGrid();
+    }
+    showHint("library cleared", 900);
+  }catch(err){
+    console.error(err);
+    showHint("clear failed", 1200);
+  }
+});
+
+    btnDeleteSelected.addEventListener("click", ()=>{
+      deleteSelectedSticker();
+    });
+
+    document.getElementById("btnClearAll").addEventListener("click", ()=>{
+      stickers.forEach(s => s.el.remove());
+      stickers = [];
+      deselect();
+
+        // ✅ 同步清场
+      field = null;
+      fieldPts = [];
+      fieldDrawing = false;
+      clearFieldOverlay();
+
+      showHint("已清空", 800);
+    });
+
+    function syncGridVals(){
+      gridRowsVal.textContent = String(gridRowsEl.value);
+      gridColsVal.textContent = String(gridColsEl.value);
+      updateRoiGridPreview();
+    }
+    gridRowsEl.addEventListener("input", syncGridVals);
+    gridColsEl.addEventListener("input", syncGridVals);
+    syncGridVals();
+
+document.getElementById("btnGridCancel").addEventListener("click", ()=>{
+  gridbar.style.display = "none";
+  showRoiGridPreview(false); 
+  pendingGridRect = null;
+  hideROI();
+  showHint("cancel", 700);
+});
+
+document.getElementById("btnGridDone").addEventListener("click", async ()=>{
+  if (!pendingGridRect) return;
+
+  // ✅ 在用户点 done 的手势里：请求 motion 权限 + 安装 shake 监听
+  //    这样即使 Shuffle OFF，也能摇一摇触发 “只洗 grid”
+  const ok = await ensureShakeReady();
+  if (!ok){
+    showHint("未开启 Motion 权限：摇一摇无法洗牌（可在 Safari 设置里开启）", 1400);
+    // 不 return：grid 仍然照常生成，只是不能摇
+  }
+
+  const rows = parseInt(gridRowsEl.value, 10) || 1;
+  const cols = parseInt(gridColsEl.value, 10) || 1;
+  await createGridFromROI(pendingGridRect, rows, cols);
+
+  showRoiGridPreview(false);
+
+  gridbar.style.display = "none";
+  pendingGridRect = null;
+  hideROI();
+});
+
+function syncSideVals(){
+  sideLenVal.textContent = String(sideLenEl.value);
+  sideAngVal.textContent = String(sideAngEl.value) + "°";
+}
+
+function previewSide(){
+const sel = selected; // 保存当前 selected 引用
+  if (!sel) return;
+
+  if (!selected._sideBaseCanvas) snapshotStickerBase(selected);
+  restoreStickerBase(selected);
+
+  const thickness = parseInt(sideLenEl.value, 10) || 18;
+  const ang = (parseInt(sideAngEl.value, 10) || 0) * Math.PI / 180;
+
+  const dx = Math.cos(ang);
+  const dy = Math.sin(ang);
+
+  applySideExtrude(thickness, dx, dy, 0.10, true);
+}
+
+sideLenEl.addEventListener("input", (e)=>{
+  syncSideVals();
+  previewSide();
+});
+sideAngEl.addEventListener("input", (e)=>{
+  syncSideVals();
+  previewSide();
+});
+
+syncSideVals();
+
+function shuffleGridGroup(group){
+  if (!group?.pieces?.length) return;
+
+  // 随机打乱槽位 index
+  const indices = group.cells.map((_, i)=>i);
+  for (let i=indices.length-1; i>0; i--){
+    const j = (Math.random() * (i+1)) | 0;
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+
+  // 把每个 piece 移动到新的槽位，但外框不变
+  group.pieces.forEach((st, k)=>{
+    const slot = group.cells[indices[k]];
+    st.x = slot.x;
+    st.y = slot.y;
+
+    st.el.style.transition = "left 180ms ease, top 180ms ease";
+    st.el.style.left = st.x + "px";
+    st.el.style.top  = st.y + "px";
+
+    // 过一会儿取消 transition，避免影响你后续拖拽手感
+    clearTimeout(st._t);
+    st._t = setTimeout(()=>{ st.el.style.transition = ""; }, 220);
+  });
+
+  showHint("shuffle!", 700);
+}
+
+function shuffleAllGrids(){
+  if (!gridGroups.length) return;
+  // 你也可以只洗最后一个：gridGroups[gridGroups.length-1]
+  gridGroups.forEach(g => shuffleGridGroup(g));
+}
+
+function shuffleAllStickers(swaps = 12){
+  const n = stickers.length;
+  if (n < 2) return;
+
+  // 记录当前位置
+  const pos = stickers.map(st => ({ x: st.x, y: st.y }));
+
+  // 做若干次随机“成对交换”
+  const times = Math.min(swaps, n * 2);
+  for (let t=0; t<times; t++){
+    const a = (Math.random() * n) | 0;
+    let b = (Math.random() * n) | 0;
+    if (b === a) b = (b + 1) % n;
+    [pos[a], pos[b]] = [pos[b], pos[a]];
+  }
+
+  // 过渡动画（更像洗牌）
+  stickers.forEach((st, i)=>{
+    st.x = pos[i].x;
+    st.y = pos[i].y;
+
+    st.el.style.transition = "left 180ms ease, top 180ms ease";
+    st.el.style.left = st.x + "px";
+    st.el.style.top  = st.y + "px";
+
+    clearTimeout(st._tShuffle);
+    st._tShuffle = setTimeout(()=>{ st.el.style.transition = ""; }, 220);
+  });
+
+  showHint("shuffle!", 700);
+}
+
+// =========================
+// Gravity Mode (tilt-driven) for all stickers
+// =========================
+let gravityMode = false;
+let shuffleMode = false;
+
+let shakeReady = false;
+let tiltReady  = false;
+
+async function ensureShakeReady(){
+  if (shakeReady) return true;
+
+  const DME = window.DeviceMotionEvent;
+  if (typeof DME?.requestPermission === "function"){
+    try{
+      const res = await DME.requestPermission();
+      if (res !== "granted") return false;
+    }catch{
+      return false;
+    }
+  }
+
+  installShake();     // 你已有函数，内部也有防重复锁 shakeInstalled
+  shakeReady = true;
+  return true;
+}
+
+async function ensureTiltReady(){
+  if (tiltReady) return true;
+
+  const DOE = window.DeviceOrientationEvent;
+  if (typeof DOE?.requestPermission === "function"){
+    try{
+      const res = await DOE.requestPermission();
+      if (res !== "granted") return false;
+    }catch{
+      return false;
+    }
+  }
+
+  tiltReady = true;
+  return true;
+}
+
+let gravityRAF = 0;
+let lastT = 0;
+
+// tilt -> force vector（单位：px/s^2）
+let tiltAX = 0; // right positive
+let tiltAY = 0; // down positive
+
+// iOS 上用 DeviceOrientation 取倾斜更稳定
+function onDeviceOrientation(e){
+  // gamma: 左右倾斜 [-90..90]，beta: 前后倾斜 [-180..180]
+  const g = (typeof e.gamma === "number") ? e.gamma : 0;
+  const b = (typeof e.beta  === "number") ? e.beta  : 0;
+
+  // 归一化到 [-1..1]，并限制极端值
+  const nx = clamp(g / 35, -1, 1); // 35°左右就满力
+  const ny = clamp(b / 35, -1, 1);
+
+  // 转成加速度（越大越“滑”）
+  const A = 520; // px/s^2（温和：320~700）
+  tiltAX = nx * A;
+  tiltAY = ny * A;
+}
+
+function startGravityLoop(){
+  if (gravityRAF) return;
+  lastT = 0;
+  gravityRAF = requestAnimationFrame(gravityTick);
+}
+
+function stopGravityLoop(){
+  if (gravityRAF) cancelAnimationFrame(gravityRAF);
+  gravityRAF = 0;
+  lastT = 0;
+
+  // 停止时把力归零，让它慢慢停住
+  tiltAX = 0;
+  tiltAY = 0;
+}
+
+function gravityTick(t){
+  const dt = lastT ? Math.min(0.033, (t - lastT)/1000) : 0.016;
+  lastT = t;
+
+  const W = stage.clientWidth;
+  const H = stage.clientHeight;
+
+  // 阻尼 / 反弹（轻量不夸张）
+  const linearDamp = 0.90;   // 越小越快停
+  const angDamp    = 0.92;
+  const bounce     = 0.58;   // 边缘反弹力度
+  const maxV       = 1200;   // 速度上限，防止失控
+
+  // 很轻的随机旋转（可关掉：把 jitter=0）
+  const jitter = 0.25; // rad/s^2（越大越晃）
+  
+  for (const st of stickers){
+    // 手在拖 / 编辑时不参与物理
+    if (st._physLock) continue;
+
+    // 初始化（兼容旧 sticker）
+    st.vx ??= 0; st.vy ??= 0; st.av ??= 0;
+
+    // 1) 倾斜力 -> 速度
+    st.vx += tiltAX * dt;
+    st.vy += tiltAY * dt;
+
+// 1.5) Field force（MAGNET v2: dock binding）
+if (field){
+  const dock = field.docks.get(st);
+  if (dock){
+    const cx = st.x + (st.w * st.scale)/2;
+    const cy = st.y + (st.h * st.scale)/2;
+
+    const tx = dock.x;
+    const ty = dock.y;
+
+    const dx = tx - cx;
+    const dy = ty - cy;
+    const d  = Math.hypot(dx,dy) || 1;
+
+    // 越近越柔
+    const pull = field.strength * (0.25 + 0.75 * clamp(d/420, 0, 1));
+
+    // radial accel
+    const ax = (dx/d) * pull;
+    const ay = (dy/d) * pull;
+
+    // swirl（切向）
+    const sx = (-dy/d) * pull * field.swirl * 0.16;
+    const sy = ( dx/d) * pull * field.swirl * 0.16;
+
+    st.vx += (ax + sx) * dt;
+    st.vy += (ay + sy) * dt;
+
+    // 接近 dock 时角速度变小，避免乱抖
+    st.av += clamp((sx+sy)/1200, -0.8, 0.8) * dt * clamp(d/240, 0, 1);
+
+    // 阻尼：更容易停住
+    st.vx *= field.damping;
+    st.vy *= field.damping;
+
+    if (d < 12){
+      st.vx *= 0.55;
+      st.vy *= 0.55;
+    }
+  }
+}
+
+    // 2) 轻微旋转趋势（速度越大越容易转一点点）
+    const sp = Math.hypot(st.vx, st.vy);
+    st.av += (Math.sign(st.vx)*0.15 + (Math.random()*2-1)*jitter) * dt * clamp(sp/800, 0, 1);
+
+    // 3) integrate
+    st.x += st.vx * dt;
+    st.y += st.vy * dt;
+    st.rot += st.av * dt;
+
+    // 速度限制
+    st.vx = clamp(st.vx, -maxV, maxV);
+    st.vy = clamp(st.vy, -maxV, maxV);
+    st.av = clamp(st.av, -3.0, 3.0);
+
+    // 边界（用显示尺寸：w/h * scale）
+    const w = st.w * st.scale;
+    const h = st.h * st.scale;
+
+    if (st.x < 0){ st.x = 0; st.vx = Math.abs(st.vx) * bounce; }
+    if (st.y < 0){ st.y = 0; st.vy = Math.abs(st.vy) * bounce; }
+    if (st.x + w > W){ st.x = Math.max(0, W - w); st.vx = -Math.abs(st.vx) * bounce; }
+    if (st.y + h > H){ st.y = Math.max(0, H - h); st.vy = -Math.abs(st.vy) * bounce; }
+
+    // 阻尼
+    st.vx *= linearDamp;
+    st.vy *= linearDamp;
+    st.av *= angDamp;
+
+    // 应用到 DOM
+    st.el.style.left = st.x + "px";
+    st.el.style.top  = st.y + "px";
+    applyTransform(st);
+  }
+
+  // very light collision push（可选：想更省事可以删掉这一段）
+  for (let i=0; i<stickers.length; i++){
+    const a = stickers[i];
+    if (a._physLock) continue;
+    const aw = a.w * a.scale, ah = a.h * a.scale;
+    const ax1 = a.x, ay1 = a.y, ax2 = a.x + aw, ay2 = a.y + ah;
+
+    for (let j=i+1; j<stickers.length; j++){
+      const b = stickers[j];
+      if (b._physLock) continue;
+      const bw = b.w * b.scale, bh = b.h * b.scale;
+      const bx1 = b.x, by1 = b.y, bx2 = b.x + bw, by2 = b.y + bh;
+
+      if (ax2 < bx1 || ax1 > bx2 || ay2 < by1 || ay1 > by2) continue;
+
+      const overlapX = Math.min(ax2, bx2) - Math.max(ax1, bx1);
+      const overlapY = Math.min(ay2, by2) - Math.max(ay1, by1);
+
+      const push = 0.5; // 推开力度（0.3~0.8）
+      if (overlapX < overlapY){
+        const dir = (a.x + aw/2) < (b.x + bw/2) ? -1 : 1;
+        const d = overlapX * push;
+        a.x += dir * d;
+        b.x -= dir * d;
+        a.vx *= 0.96; b.vx *= 0.96;
+      }else{
+        const dir = (a.y + ah/2) < (b.y + bh/2) ? -1 : 1;
+        const d = overlapY * push;
+        a.y += dir * d;
+        b.y -= dir * d;
+        a.vy *= 0.96; b.vy *= 0.96;
+      }
+
+      a.el.style.left = a.x + "px";
+      a.el.style.top  = a.y + "px";
+      b.el.style.left = b.x + "px";
+      b.el.style.top  = b.y + "px";
+    }
+  }
+
+    const needLoop = gravityMode || !!field;
+    if (needLoop){
+      gravityRAF = requestAnimationFrame(gravityTick);
+    }else{
+      stopGravityLoop();
+    }
+}
+
+async function requestOrientationPermissionIfNeeded(){
+  const DOE = window.DeviceOrientationEvent;
+  if (typeof DOE !== "undefined" && typeof DOE.requestPermission === "function"){
+    // iOS 需要用户手势触发
+    const res = await DOE.requestPermission();
+    return res === "granted";
+  }
+  return true; // 其他平台/旧版不需要
+}
+
+
+// iOS / Android: devicemotion
+let lastShakeAt = 0;
+let shakeInstalled = false;
+function installShake(){
+  if (shakeInstalled) return;     // ✅ 防重复
+  shakeInstalled = true;
+
+  if (!("DeviceMotionEvent" in window)) return;
+
+  const TH = 16;      // 阈值（可调：12~22）
+  const GAP = 650;    // 防抖间隔
+
+  window.addEventListener("devicemotion", (e)=>{
+    //showHint("motion event!", 300);
+    const now = Date.now();
+    if (now - lastShakeAt < GAP) return;
+
+    const a = e.accelerationIncludingGravity;
+    if (!a) return;
+
+    const mag = Math.sqrt((a.x||0)**2 + (a.y||0)**2 + (a.z||0)**2);
+    if (mag > TH){
+      lastShakeAt = now;
+
+      // ✅ 1) Shuffle ON：洗全场
+      if (shuffleMode){
+        shuffleAllStickers(Math.max(8, Math.round(stickers.length * 0.6)));
+        return;
+      }
+
+      // ✅ 2) Shuffle OFF：维持原逻辑（只洗 grid）
+      shuffleAllGrids();
+    }
+  }, { passive:true });
+}
+
+// iOS 13+ 可能要用户手势授权 motion
+async function requestMotionPermissionIfNeeded(){
+  const DME = window.DeviceMotionEvent;
+  if (typeof DME?.requestPermission === "function"){
+    try{
+      const res = await DME.requestPermission();
+      if (res !== "granted") showHint("Motion 权限未开启，无法摇一摇", 1200);
+    }catch{
+      showHint("Motion 权限请求失败", 1000);
+    }
+  }
+}
+
+// 桌面端备用：按 S 洗牌
+window.addEventListener("keydown", (e)=>{
+  if (e.key.toLowerCase() === "s") shuffleAllGrids();
+});
+
+    setActionEnabled(false);
+    setCaptureMode("mp");
+    resizeDrawLayer();
+    refreshLibraryUI().catch(console.error);
+    initModel();
+  </script>
+</body>
+</html>
