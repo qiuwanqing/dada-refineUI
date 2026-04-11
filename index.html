@@ -24,6 +24,19 @@
       background: linear-gradient(to bottom, rgba(0,0,0,.86), rgba(0,0,0,0));
       pointer-events:auto;
     }
+
+     /* 顶部按钮通用样式 */
+    /*.topbar button{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      backdrop-filter: blur(10px);
+      -webkit-tap-highlight-color: transparent;
+      cursor:pointer;
+    }
+
     /*-----------------------分组折叠样式--------------------------*/
    .groupFold {
     display: flex;
@@ -242,33 +255,6 @@
       to   { transform: scale(1); opacity:1; }
     }
 
-
-     /* ---------------- 功能选择环 ---------------- */
-    #funcCircleContainer { 
-      position:absolute; 
-      left:0; 
-      top:0; 
-      width:100%; 
-      height:100%; 
-      z-index:99999;
-      pointer-events:none; 
-    }
-    
-      .funcCircleBtn{
-      position:absolute;
-      transform:translate(-50%,-50%);
-      pointer-events:auto;
-      border:none;
-      background:none;
-      padding:0;
-      cursor:pointer;
-    }
-
-    .funcCircleBtn img{
-      width:52px;
-      height:auto;
-      display:block;
-    }
     /* ---------------- 底部编辑栏 ---------------- */
     #editbar{
       position:absolute; left:0; right:0; bottom:0;
@@ -480,6 +466,13 @@
     height: 15px;
     margin-left: 9px;
     margin-top: 4px;
+}
+
+/* Edit 仍然是文字按钮，可保持原来样式 */
+#btnEdit {
+    width: auto;
+    margin-left: 0px;
+    margin-top: 20px;
 }
  /* ---------------- 折叠弹动 ---------------- */
    #rightColumn {
@@ -807,6 +800,7 @@
                 <button id="btnClearAll" class="subBtn">
                     <img src="assets/clear.png" alt="Clear">
                 </button>
+        <button id="btnEdit" class="primary disabled">Edit</button>
 
         </div>
     </div>
@@ -1019,45 +1013,25 @@
         <!-- ✅ 改成可点击按钮，同时绑定 id -->
         <button id="btnFxDistort" class="primary">Distort</button>
 
-        <div id="distortControls" class="controls" style="display:none; position:absolute;">
-              <!-- radius 0~220 每10 -->
-              <!-- 示例，只写前几档，可按同规则扩展 -->
-              <button class="subBtn radiusBtn" data-value="0"><img src="assets/0.png"></button>
-              <button class="subBtn radiusBtn" data-value="10"><img src="assets/10.png"></button>
-              <button class="subBtn radiusBtn" data-value="20"><img src="assets/20.png"></button>
-              <button class="subBtn radiusBtn" data-value="30"><img src="assets/30.png"></button>
-              <button class="subBtn radiusBtn" data-value="40"><img src="assets/40.png"></button>
-              <button class="subBtn radiusBtn" data-value="50"><img src="assets/50.png"></button>              
-              <button class="subBtn radiusBtn" data-value="60"><img src="assets/60.png"></button>
-              <button class="subBtn radiusBtn" data-value="70"><img src="assets/70.png"></button>
-              <button class="subBtn radiusBtn" data-value="80"><img src="assets/80.png"></button>
-              <button class="subBtn radiusBtn" data-value="90"><img src="assets/90.png"></button>
-              <button class="subBtn radiusBtn" data-value="100"><img src="assets/100.png"></button>
-              <button class="subBtn radiusBtn" data-value="110"><img src="assets/110.png"></button>
-              <button class="subBtn radiusBtn" data-value="120"><img src="assets/120.png"></button>            
-               <!-- strength -100~100 每5 -->
-              <button class="subBtn strengthBtn" data-value="0"><img src="assets/0.png"></button>
-              <button class="subBtn strengthBtn" data-value="10"><img src="assets/10.png"></button>
-              <button class="subBtn strengthBtn" data-value="20"><img src="assets/20.png"></button>
-              <button class="subBtn strengthBtn" data-value="30"><img src="assets/30.png"></button>
-              <button class="subBtn strengthBtn" data-value="40"><img src="assets/40.png"></button>
-              <button class="subBtn strengthBtn" data-value="50"><img src="assets/50.png"></button>
-              <button class="subBtn strengthBtn" data-value="60"><img src="assets/60.png"></button>
-              <button class="subBtn strengthBtn" data-value="70"><img src="assets/70.png"></button>
-              <button class="subBtn strengthBtn" data-value="80"><img src="assets/80.png"></button>
-              <button class="subBtn strengthBtn" data-value="90"><img src="assets/90.png"></button>     
-              <button class="subBtn strengthBtn" data-value="100"><img src="assets/100.png"></button>
-              <button class="subBtn strengthBtn" data-value="110"><img src="assets/110.png"></button>
-              <button class="subBtn strengthBtn" data-value="120"><img src="assets/120.png"></button>      
-            </div>
+        <!-- distort 滑块容器，初始隐藏 -->
+        <span id="distortControls" style="display:none;">
+            <span class="pill">
+                radius
+                <input id="radius" type="range" min="10" max="220" value="120">
+            </span>
+            <span class="pill">
+                strength
+                <input id="strength" type="range" min="-100" max="100" value="85">
+            </span>
         </span>
         <button id="btnFxBlur" class="primary">Blur</button>
-        <div id="blurControls" class="controls" style="display:none; position:absolute;">
-              <button class="subBtn blurBtn" data-value="1"><img src="assets/0.png"></button>
-              <button class="subBtn blurBtn" data-value="5"><img src="assets/10.png"></button>
-              <button class="subBtn blurBtn" data-value="10"><img src="assets/20.png"></button>
-              <button class="subBtn blurBtn" data-value="30"><img src="assets/30.png"></button>
-            </div>
+        <!-- Blur 滑块容器，初始隐藏 -->
+        <span id="blurControls" style="display:none;">
+            <span class="pill">
+                strength
+                <input id="blurStrength" type="range" min="1" max="30" value="1">
+            </span>
+        </span>
         <button id="btnFxBW" class="primary">B&W</button>
         <button id="btnFxNoise" class="primary">Noise</button>
 
@@ -1110,6 +1084,7 @@
 
       // 全局按钮Save/Edit/Delete
       const btnSave = document.getElementById("btnSave");
+      const btnEdit = document.getElementById("btnEdit");
       const btnDeleteSelected = document.getElementById("btnDeleteSelected");
 
       // Grid 相关
@@ -1146,43 +1121,25 @@
             group.classList.toggle("expanded"); // 切换展开状态
         });
     });
+
     
     // ===== distort=====
-const btnFxDistort = document.getElementById("btnFxDistort");
-const distortControls = document.getElementById("distortControls");
+    const btnFxDistort = document.getElementById("btnFxDistort");
+    const distortControls = document.getElementById("distortControls");
 
-// 新增：保存当前数值（因为你现在不用 slider 了）
-let radiusValue = 0;
-let strengthValue = 0;
+    // 核心处理函数：根据 radius 和 strength 处理 distort
+    function updateDistort(){
+        const r = radiusEl.value;
+        const s = strengthEl.value;
 
-// 核心处理函数：保留你原来的 distort 逻辑
-function updateDistort(){
-    const r = radiusValue;
-    const s = strengthValue;
+        // 这里写你的 distort 逻辑
+        // 例如画 canvas 或处理图像
+        console.log("distort update:", r, s); // 暂时用 log 占位
+    }
 
-    // ⚠️这里下面保持你原来写的 distort 算法不动
-    console.log("distort update:", r, s);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const radiusBtns = document.querySelectorAll('.radiusBtn');
-  const strengthBtns = document.querySelectorAll('.strengthBtn');
-  const editDistort = { radius:0, strength:0 };
-
-  radiusBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      editDistort.radius = Number(btn.dataset.value);
-      updateDistort();
-    });
-  });
-
-  strengthBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      editDistort.strengt = Number(btn.dataset.value);
-      updateDistort();
-    });
-  });
-});
+    // 滑块事件：实时更新
+    radiusEl.addEventListener("input", updateDistort);
+    strengthEl.addEventListener("input", updateDistort);
 
     // 按钮点击事件：切换显示 + 调用一次效果
     btnFxDistort.addEventListener("click", () => {
@@ -1227,18 +1184,7 @@ function applyEditBlur() {
 }
 
 // 滑块事件绑定
-// 获取所有 radius 按钮
-const radiusBtns = document.querySelectorAll('.radiusBtn');
-
-radiusBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const r = Number(btn.dataset.value);    // 读取 data-value
-    editBlurFx.radius = r;                  // 更新半径值
-    editBlurFx.active = r > 0;             // 激活状态
-    redrawDrawLayer();                      // 触发绘制更新
-    btn.classList.toggle("active", editBlurFx.active); // 高亮按钮
-  });
-});
+radiusEl.addEventListener("input", applyEditBlur);
 
 // 点击按钮显示/隐藏滑块
 blurBtn.addEventListener("click", () => {
@@ -1329,6 +1275,7 @@ blurBtn.addEventListener("click", () => {
 
     function setActionEnabled(enabled){
       btnSave.classList.toggle("disabled", !enabled);
+      btnEdit.classList.toggle("disabled", !enabled);
       btnDeleteSelected?.classList.toggle("disabled", !enabled);
     }
 
@@ -1783,33 +1730,58 @@ async function initModel(){
   try{
     loader.innerText = "准备加载 MediaPipe…";
 
-    const mod = await import("./vendor/vision_bundle.mjs");
+    // ✅ 本地同源 import（iPad Safari 不会 CORS 挡）
+    loader.innerText = "加载 vision_bundle（local ./vendor/vision_bundle.mjs）…";
+
+    let mod = null;
+    try{
+      mod = await import("./vendor/vision_bundle.mjs");
+      console.log("loaded keys:", Object.keys(mod));
+    }catch(e){
+      console.error("import local vendor failed:", e);
+      loader.innerText = "vision_bundle 本地加载失败：\n" + (e?.message || String(e));
+      return;
+    }
+
     InteractiveSegmenter = mod.InteractiveSegmenter;
     FilesetResolver = mod.FilesetResolver;
 
-    loader.innerText = "初始化 Vision…";
+    // ===== 加载 WASM（用你仓库 ./vendor/ 下的文件）=====
+    loader.innerText = "正在下载 WASM（local ./vendor/）…";
 
+    // fetch + arrayBuffer + compile 替代 compileStreaming
+    const wasmResponse = await fetch("./vendor/vision_wasm_internal.wasm");
+    if (!wasmResponse.ok) throw new Error(`WASM fetch failed: ${wasmResponse.status}`);
+    const wasmBuffer = await wasmResponse.arrayBuffer();
+    const wasmModule = await WebAssembly.compile(wasmBuffer);
+
+    console.log("WASM Module compiled successfully");
+
+    // ===== 初始化 FilesetResolver，用本地模块和已编译 WASM =====
     const vision = await FilesetResolver.forVisionTasks("./vendor/");
 
-    loader.innerText = "加载模型…";
+    // ===== 加载模型 =====
+    loader.innerText = "正在加载模型（CPU）…";
 
-    interactiveSegmenter =
-      await InteractiveSegmenter.createFromOptions(vision,{
-        baseOptions:{
-          modelAssetPath:"./models/magic_touch.tflite",
-          delegate:"CPU"
-        },
-        outputCategoryMask:true,
-        outputConfidenceMasks:false
-      });
+    interactiveSegmenter = await InteractiveSegmenter.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "./models/magic_touch.tflite",
+        delegate: "CPU",
+        wasmModule: wasmModule, // ✅ 使用本地已编译模块
+      },
+      outputCategoryMask: true,
+      outputConfidenceMasks: false
+    });
 
-    loader.innerText = "模型就绪（点 Start Camera）";
+    loader.innerText = "模型就绪（CPU），请开启相机";
+    console.log("InteractiveSegmenter initialized successfully");
 
   }catch(err){
     console.error(err);
-    loader.innerText = "模型加载失败";
+    loader.innerText = "模型加载失败:\n" + (err?.message || String(err));
   }
 }
+
 
     const btnModeMP   = document.getElementById("btnModeMP");
     const btnModeRect = document.getElementById("btnModeRect");
@@ -3458,6 +3430,14 @@ btnSave.addEventListener("click", async ()=>{
   }
 });
 
+    btnEdit.addEventListener("click", ()=>{
+      if (!selected) return;
+      editbar.style.display = "flex";
+      paintUndoStack = [];
+      editMode = "stretch"; 
+      showHint("edit：拖动=拉伸；双指=旋转缩放；Done 退出；顶栏可切 Mosaic / M-Blur", 1300);
+    });
+
     document.getElementById("btnFxBlur").addEventListener("click", ()=>{
     if (!selected) return;
 
@@ -4046,283 +4026,6 @@ window.addEventListener("keydown", (e)=>{
     resizeDrawLayer();
     refreshLibraryUI().catch(console.error);
     initModel();
-// ==============================点击sticker进入edit ======
-// ======================== Sticker 点击 → 只打开功能环 ========================
-stage.addEventListener("pointerup", (e) => {
-    const sticker = e.target.closest(".sticker");
-    if (!sticker) return;
-
-    // 阻止旧系统继续响应
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
-    // 关闭旧 editbar
-    editbar.style.display = "none";
-
-    // 删除旧功能环（避免重复生成）
-    document.getElementById("funcCircleContainer")?.remove();
-
-    // 选中状态
-    document.querySelectorAll(".sticker").forEach(s=>{
-        s.classList.remove("selected");
-    });
-    sticker.classList.add("selected");
-
-    // 打开功能环
-    showFunctionCircle();
-}, true);
-
-// ======================== 功能环函数 ========================
-function showFunctionCircle() {
-    const funcs = [
-        { name: "Distort", png: "distort.png", id: "distort" },
-        { name: "Blur",    png: "blur.png",    id: "blur"    },
-        { name: "B&W",     png: "bw.png",      id: "bw"      },
-        { name: "Noise",   png: "noise.png",   id: "noise"   },
-        { name: "Side",    png: "side.png",    id: "side"    },
-        { name: "Mosaic",  png: "mosaic.png",  id: "mosaic"  }
-    ];
-
-    // 移除之前的
-    document.getElementById("funcCircleContainer")?.remove();
-
-    // 容器
-    const container = document.createElement("div");
-    container.id = "funcCircleContainer";
-    container.style.position = "absolute";
-    container.style.left = "0";
-    container.style.top  = "0";
-    container.style.width = "100%";
-    container.style.height = "100%";
-    container.style.pointerEvents = "none";
-    document.body.appendChild(container);
-
-    // 圆盘中心
-    const centerImg = document.createElement("img");
-    centerImg.src = "assets/round.png";
-    centerImg.id  = "funcCircleCenter";
-    centerImg.style.position = "absolute";
-    centerImg.style.width  = "50px";
-    centerImg.style.height = "50px";
-    centerImg.style.pointerEvents = "auto";
-    centerImg.style.touchAction = "none"; // 防止浏览器手势干扰
-    container.appendChild(centerImg);
-
-    // 初始半径
-    let radiusPx = 80;
-
-    // 当前旋转角度
-    let rotationAngle = 0;
-
-    // 创建功能按钮
-    funcs.forEach(func => {
-        const btn = document.createElement("button");
-        btn.className = "funcCircleBtn";
-        btn.style.position = "absolute";
-        btn.style.pointerEvents = "auto";
-        btn.style.border = "none";
-        btn.style.background = "none";
-        btn.style.padding = "0";
-        btn.style.cursor = "pointer";
-
-        const img = document.createElement("img");
-        img.src = `assets/${func.png}`;
-        img.alt = func.name;
-        img.style.width = "45px";
-        img.style.height = "auto";
-
-        btn.appendChild(img);
-        container.appendChild(btn);
-
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            document.body.removeChild(container);
-            openCircularControl(func.id);
-        });
-    });
-
-    // 更新功能按钮位置
-    function updateButtons() {
-        const angleStep = (Math.PI * 2) / funcs.length;
-        const cx = centerImg._x;
-        const cy = centerImg._y;
-
-        funcs.forEach((func, i) => {
-            const angle = i * angleStep + rotationAngle - Math.PI / 2;
-            const btn = container.querySelectorAll(".funcCircleBtn")[i];
-            btn.style.left = cx + radiusPx * Math.cos(angle) + "px";
-            btn.style.top  = cy + radiusPx * Math.sin(angle) + "px";
-        });
-    }
-
-    // ===================== 单指拖动旋转圆盘 =====================
-
-    let isDragging = false;
-    let lastPointerAngle = 0;
-
-    centerImg.addEventListener("pointerdown", (e) => {
-        isDragging = true;
-
-        const rect = centerImg.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top  + rect.height / 2;
-
-        lastPointerAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
-        e.preventDefault();
-    });
-
-    document.addEventListener("pointermove", (e) => {
-        if (!isDragging) return;
-
-        const rect = centerImg.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top  + rect.height / 2;
-
-        const newAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
-        const delta = newAngle - lastPointerAngle;
-        lastPointerAngle = newAngle;
-
-        rotationAngle += delta;
-        updateButtons();
-    });
-
-    document.addEventListener("pointerup", () => {
-        isDragging = false;
-    });
-
-    // ===================== 双指捏合缩放半径 =====================
-
-    let pinchStartDist = 0;
-    let pinchStartRadius = 0;
-
-    container.addEventListener("touchstart", e => {
-        if (e.touches.length === 2) {
-            const dx = e.touches[1].clientX - e.touches[0].clientX;
-            const dy = e.touches[1].clientY - e.touches[0].clientY;
-            pinchStartDist = Math.hypot(dx, dy);
-            pinchStartRadius = radiusPx;
-        }
-    });
-
-    container.addEventListener("touchmove", e => {
-        if (e.touches.length === 2) {
-            e.preventDefault(); // 阻止页面滚动
-
-            const dx = e.touches[1].clientX - e.touches[0].clientX;
-            const dy = e.touches[1].clientY - e.touches[0].clientY;
-            const newDist = Math.hypot(dx, dy);
-
-            const diff = newDist - pinchStartDist;
-            radiusPx = pinchStartRadius + diff;
-            radiusPx = Math.max(40, Math.min(200, radiusPx));
-
-            updateButtons();
-        }
-    });
-
-    // ===================== 跟随手指/鼠标移动中心 =====================
-
-    function moveCircle(e) {
-        centerImg.style.left = e.clientX + "px";
-        centerImg.style.top  = e.clientY + "px";
-        centerImg._x = e.clientX;
-        centerImg._y = e.clientY;
-        updateButtons();
-    }
-
-    container.addEventListener("pointermove", (e) => {
-        if (isDragging) return; 
-        if (e.pointerType === "touch" && e.touches?.length === 1) {
-            moveCircle(e);
-        }
-    });
-
-    document.addEventListener("pointermove", (e) => {
-        if (!e.pointerType || e.pointerType === "mouse") {
-            moveCircle(e);
-        }
-    });
-
-    // 点击空白区域关闭
-    container.addEventListener("pointerdown", e => {
-        if (e.target === container) {
-            document.body.removeChild(container);
-        }
-    });
-}
-
-// ======================== 功能 PNG 点击触发原逻辑 ========================
-function openCircularControl(funcId, cx, cy) {
-    switch(funcId){
-        case "distort":
-            showCircularSelector(cx, cy, 10, 220, "assets/radius", val => { previewDistort({radius:val}); });
-            showCircularSelector(cx, cy, -100, 100, "assets/strength/strength", val => { previewDistort({strength:val}); });
-            break;
-        case "blur":
-            showCircularSelector(cx, cy, 1, 30, "assets/blur/blur", val => { previewBlur(val); });
-            break;
-        case "bw": toggleBW(); break;
-        case "noise": toggleNoise(); break;
-        case "side":
-            showCircularSelector(cx, cy, 2, 600, "assets/side/side", val => { updateSide(val); });
-            break;
-        case "mosaic":
-            showCircularSelector(cx, cy, 2, 50, "assets/mosaic/mosaic", val => { updateMosaic(val); });
-            break;
-    }
-}
-
-// ======================== 圆圈控件生成函数 ========================
-function showCircularSelector(cx, cy, minVal, maxVal, imgPathPrefix, applyFunc) {
-    const container = document.createElement("div");
-    container.style.position = "absolute";
-    container.style.left = "0px";
-    container.style.top = "0px";
-    container.style.width = "100%";
-    container.style.height = "100%";
-    container.style.pointerEvents = "none";
-    document.body.appendChild(container);
-
-    const radiusPx = 80;
-    const total = maxVal - minVal + 1;
-    const angleStep = 2*Math.PI / total;
-
-    for(let i = minVal; i <= maxVal; i++) {
-        const btn = document.createElement("button");
-        btn.className = "subBtn";
-        btn.style.position = "absolute";
-        btn.style.pointerEvents = "auto";
-        btn.style.border = "none";
-        btn.style.background = "none";
-        btn.style.padding = "0";
-        btn.style.transform = "translate(-50%, -50%)";
-
-        const angle = (i - minVal)*angleStep - Math.PI/2;
-        const x = cx + radiusPx*Math.cos(angle);
-        const y = cy + radiusPx*Math.sin(angle);
-        btn.style.left = x+"px";
-        btn.style.top = y+"px";
-
-        const img = document.createElement("img");
-        img.src = `${imgPathPrefix}_${i}.png`;
-        img.style.width = "30px";
-        img.style.height = "30px";
-        btn.appendChild(img);
-
-        btn.addEventListener("click", () => {
-            applyFunc(i);
-            document.body.removeChild(container);
-        });
-
-        container.appendChild(btn);
-    }
-
-    container.addEventListener("click", e => {
-        if(e.target === container) document.body.removeChild(container);
-    });
-}
-
   </script>
 </body>
 </html>
