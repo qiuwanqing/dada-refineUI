@@ -1783,101 +1783,33 @@ async function initModel(){
   try{
     loader.innerText = "准备加载 MediaPipe…";
 
-    // ✅ 本地同源 import（iPad Safari 不会 CORS 挡）
-    loader.innerText = "加载 vision_bundle（local ./vendor/vision_bundle.mjs）…";
-
-    let mod = null;
-    try{
-      mod = await import("./vendor/vision_bundle.mjs");
-      console.log("loaded keys:", Object.keys(mod));
-    }catch(e){
-      console.error("import local vendor failed:", e);
-      loader.innerText = "vision_bundle 本地加载失败:\n" + (e?.message || String(e));
-      return;
-    }
-
+    const mod = await import("./vendor/vision_bundle.mjs");
     InteractiveSegmenter = mod.InteractiveSegmenter;
     FilesetResolver = mod.FilesetResolver;
 
-    // ===== 加载 WASM（用你仓库 ./vendor/ 下的文件）=====
-    loader.innerText = "正在下载 WASM（local ./vendor/）…";
+    loader.innerText = "初始化 Vision…";
 
-    // ✅ fetch + ArrayBuffer + compile 替代 compileStreaming
-    const wasmResponse = await fetch("./vendor/vision_wasm_internal.wasm");
-    if (!wasmResponse.ok) throw new Error(`WASM fetch failed: ${wasmResponse.status}`);
-    const wasmBuffer = await wasmResponse.arrayBuffer();
-    const wasmModule = await WebAssembly.compile(wasmBuffer);
-
-    console.log("WASM Module compiled successfully");
-
-    // ===== 初始化 FilesetResolver，用本地模块和已编译 WASM =====
     const vision = await FilesetResolver.forVisionTasks("./vendor/");
 
-    // ===== 加载模型 =====
-    loader.innerText = "正在加载模型（CPU）…";
+    loader.innerText = "加载模型…";
 
-    interactiveSegmenter = await InteractiveSegmenter.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: "./models/magic_touch.tflite",
-        delegate: "CPU",
-        wasmModule: wasmModule, // ✅ 使用本地已编译模块
-      },
-      outputCategoryMask: true,
-      outputConfidenceMasks: false
-    });
+    interactiveSegmenter =
+      await InteractiveSegmenter.createFromOptions(vision,{
+        baseOptions:{
+          modelAssetPath:"./models/magic_touch.tflite",
+          delegate:"CPU"
+        },
+        outputCategoryMask:true,
+        outputConfidenceMasks:false
+      });
 
-    loader.innerText = "模型就绪（CPU），请开启相机";
-    console.log("InteractiveSegmenter initialized successfully");
-
-    // ===== 模型加载完再初始化按钮，解决 Global Function 无法点击的问题 =====
-    initGlobalButtons();
-    initCaptureButtons();
-    initVideoButtons();
-    initPhysicsButtons();
+    loader.innerText = "模型就绪（点 Start Camera）";
 
   }catch(err){
     console.error(err);
-    loader.innerText = "模型加载失败:\n" + (err?.message || String(err));
+    loader.innerText = "模型加载失败";
   }
 }
-
-// ------------------ 延迟绑定按钮 ------------------
-function initGlobalButtons(){
-  document.getElementById("btnStart")?.addEventListener("click", startCamera);
-  document.getElementById("btnFlip")?.addEventListener("click", flipCamera);
-  document.getElementById("btnLibrary")?.addEventListener("click", toggleLibrary);
-  document.getElementById("btnSave")?.addEventListener("click", saveSticker);
-  document.getElementById("btnDeleteSelected")?.addEventListener("click", deleteSelected);
-  document.getElementById("btnClearAll")?.addEventListener("click", clearAll);
-}
-
-function initCaptureButtons(){
-  document.getElementById("btnModeMP")?.addEventListener("click", ()=>setCaptureMode("mp"));
-  document.getElementById("btnModeDraw")?.addEventListener("click", ()=>setCaptureMode("draw"));
-  document.getElementById("btnModeRect")?.addEventListener("click", ()=>setCaptureMode("rect"));
-  document.getElementById("btnModeGrid")?.addEventListener("click", ()=>setCaptureMode("grid"));
-  document.getElementById("btnModeMagnet")?.addEventListener("click", ()=>setCaptureMode("magnet"));
-}
-
-function initVideoButtons(){
-  document.getElementById("btnVidBW")?.addEventListener("click", toggleBW);
-  document.getElementById("btnVidBlur")?.addEventListener("click", toggleBlur);
-}
-
-function initPhysicsButtons(){
-  document.getElementById("btnModeMagnet")?.addEventListener("click", enableMagnet);
-  document.getElementById("btnShapePath")?.addEventListener("click", ()=>setShape("path"));
-  document.getElementById("btnShapeLoop")?.addEventListener("click", ()=>setShape("loop"));
-  document.getElementById("btnBindIn")?.addEventListener("click", ()=>bindField("in"));
-  document.getElementById("btnBindOut")?.addEventListener("click", ()=>bindField("out"));
-  document.getElementById("btnMagnetClear")?.addEventListener("click", clearField);
-  document.getElementById("btnGravityOff")?.addEventListener("click", ()=>toggleGravity(false));
-  document.getElementById("btnGravityOn")?.addEventListener("click", ()=>toggleGravity(true));
-  document.getElementById("btnShuffleOff")?.addEventListener("click", ()=>toggleShuffle(false));
-  document.getElementById("btnShuffleOn")?.addEventListener("click", ()=>toggleShuffle(true));
-  document.getElementById("btnFxMBlur")?.addEventListener("click", applyMBlur);
-}
-
 
     const btnModeMP   = document.getElementById("btnModeMP");
     const btnModeRect = document.getElementById("btnModeRect");
@@ -4391,89 +4323,6 @@ function showCircularSelector(cx, cy, minVal, maxVal, imgPathPrefix, applyFunc) 
     });
 }
 
-function bindControls(btn, container, sliderSelector, valueClass){
-
-    // 防止元素不存在时报错
-    if (!btn || !container) {
-        console.warn("bindControls missing:", btn, container);
-        return;
-    }
-
-    const slider = document.querySelector(sliderSelector);
-
-    btn.addEventListener('click', (e)=>{
-        e.stopPropagation();
-
-        const rect = btn.getBoundingClientRect();
-        container.style.left = `${rect.right + 10}px`;
-        container.style.top = `${rect.top}px`;
-        container.style.display = "flex";
-    });
-
-    // 如果 slider 不存在（你现在就是这种情况）
-    if (!slider) return;
-
-    container.querySelectorAll(`.${valueClass}`).forEach(b=>{
-        b.addEventListener('click', ()=>{
-            slider.value = b.dataset.value;
-            slider.dispatchEvent(new Event('input'));
-        });
-    });
-}
-
-// Distort
-bindControls(
-  document.getElementById('btnFxDistort'),
-  document.getElementById('distortControls'),
-  '#radius',
-  'radiusBtn'
-);
-bindControls(
-  document.getElementById('btnFxDistort'),
-  document.getElementById('distortControls'),
-  '#strength',
-  'strengthBtn'
-);
-
-// Blur
-bindControls(
-  document.getElementById('btnFxBlur'),
-  document.getElementById('blurControls'),
-  '#blurStrength',
-  'blurBtn'
-);
-
-// B&W
-bindControls(
-  document.getElementById('btnFxBW'),
-  document.getElementById('bwControls'),
-  '#bwSlider', // 假设你有对应滑块或属性
-  'bwBtn'
-);
-
-// Noise
-bindControls(
-  document.getElementById('btnFxNoise'),
-  document.getElementById('noiseControls'),
-  '#noiseSlider',
-  'noiseBtn'
-);
-
-// Side
-bindControls(
-  document.getElementById('btnFxSide'),
-  document.getElementById('sideControls'),
-  '#sideSlider',
-  'sideBtn'
-);
-
-// Mosaic
-bindControls(
-  document.getElementById('btnFxMosaic'),
-  document.getElementById('mosaicControls'),
-  '#mosaicSlider',
-  'mosaicBtn'
-);
   </script>
 </body>
 </html>
