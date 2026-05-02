@@ -242,6 +242,33 @@
       to   { transform: scale(1); opacity:1; }
     }
 
+
+     /* ---------------- 功能选择环 ---------------- */
+    #funcCircleContainer { 
+      position:absolute; 
+      left:0; 
+      top:0; 
+      width:100%; 
+      height:100%; 
+      z-index:99999;
+      pointer-events:none; 
+    }
+    
+      .funcCircleBtn{
+      position:absolute;
+      transform:translate(-50%,-50%);
+      pointer-events:auto;
+      border:none;
+      background:none;
+      padding:0;
+      cursor:pointer;
+    }
+
+    .funcCircleBtn img{
+      width:52px;
+      height:auto;
+      display:block;
+    }
     /* ---------------- 底部编辑栏 ---------------- */
     #editbar{
       position:absolute; left:0; right:0; bottom:0;
@@ -287,6 +314,24 @@
       background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
       pointer-events:auto;
     }
+
+    #brushPanel {
+      position: fixed;
+      left:0; right:0; bottom:0;
+      z-index: 10000;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      display:none;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      pointer-events:auto;
+    }
+    #brushPanel * {
+      pointer-events:auto;
+      touch-action: none;
+    }
     #sidebar *{ 
         pointer-events:auto; 
         touch-action: none; 
@@ -323,22 +368,73 @@
     input[type="range"]{ width:140px; }
     
     /* ---------------- Library 面板 ---------------- */
-    #libPanel{
+    #libPanelWrap{
       position:absolute;
-      left:12px; top:130px;
+      left:22px; top:143px;
       z-index: 60;
-      width: 220px;
+      display:none;
+      flex-direction: row;
+      width: 240px;
+      max-height: 70vh;
+    }
+    #libPanel{
+      flex:1;
       max-height: 75vh;
-      /*overflow:auto;*/
-      overflow-y: scroll;
-      overflow-x: hidden; 
+      overflow-y: auto;
+      overflow-x: hidden;
       padding:10px;
       border:1px solid rgba(255,255,255,.12);
-      background: rgba(20,20,24,.78);
+      background: rgba(255,255,255,.48);
       backdrop-filter: blur(10px);
       border-radius: 0px;
-      display:none;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
+    /* Library 面板背景改为白色68% */
+
+    #libScrollbar {
+      width: 20px;
+      background: #5cb7ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      user-select: none;
+    }
+    #libScrollbar #btnLibClose {
+      border: none;
+      background: none;
+      padding: 2px;
+      cursor: pointer;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    #libScrollTrack {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      margin-top: 4px;
+    }
+    #libScrollThumb {
+      width: 14px;
+      height: 30px;
+      background: #808080;
+      border-radius: 4px;
+      position: absolute;
+      left: 3px;
+      top: 0;
+      cursor: grab;
+    }
+    #libScrollThumb:active {
+      cursor: grabbing;
+    }
+
+
+/* 自定义滚动条 — 隐藏原生滚动条 */
+#libPanel::-webkit-scrollbar {
+    width: 0px;
+    display: none;
+}
     #libPanel h3{
       margin:0 0 8px 0;
       font-size: 12px;
@@ -348,21 +444,29 @@
     }
     .thumb{
       width:100%;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.12);
-      margin-bottom:8px;
+      border-radius:0px;
+      border:1px dashed rgb(0, 0, 0);
+      margin-bottom:4px;
       display:block;
       cursor:pointer;
-      background:#000;
+      background:rgba(255,255,255,0);
+    }
+    .lib-selected .thumb{
+      border:2px solid #ff4444;
+      opacity:0.7;
     }
     .row{ display:flex; gap:8px; margin-bottom:8px; }
     .row button{
       flex:1; border-radius:10px; padding:6px 8px;
-      border:1px solid rgba(255,255,255,.18);
+      border:0px solid rgba(255,255,255,.18);
       background: rgba(255,255,255,.08);
       color:#fff;
     }
-    .small{ font-size:12px; opacity:.8; }
+    .small{ 
+      font-size:6px; 
+      opacity:.8; 
+      color: #000000;
+    }
     /* ================= Library 缩略图三列布局 ================= */
     #libList {
     display: grid;
@@ -401,7 +505,7 @@
 
     .globalIcon {
         width: auto;
-        height: 20px;
+        height: 24px;
         object-fit: contain;  /* 保持图标比例 */
         pointer-events: none; /* 点击事件传给按钮 */
     }
@@ -410,10 +514,10 @@
 
 /* Start Camera */
 #btnStart img {
-    width: 70px;      /* 自己设定宽度 */
+    width: 80px;      /* 自己设定宽度 */
     height: auto;     /* 保持比例 */
-    margin-left:0px; /* 单独调整位置 */
-    margin-top: 6px;
+    margin-left:2px; /* 单独调整位置 */
+    margin-top: 5px;
 }
 
 /* Flip */
@@ -426,7 +530,7 @@
 
 /* Save Sticker */
 #btnSave img {
-    width: 65px;
+    width: 70px;
     height: auto;
     margin-left: 15px;
     margin-top:0px;
@@ -454,24 +558,23 @@
     margin-left: 9px;
     margin-top: 4px;
 }
-
-/* Edit 仍然是文字按钮，可保持原来样式 */
-#btnEdit {
-    width: auto;
-    margin-left: 0px;
-    margin-top: 20px;
-}
  /* ---------------- 折叠弹动 ---------------- */
    #rightColumn {
     position: absolute;
     right: 15px;
     top: 26px;
     z-index: 50;
+    --group-gap-collapsed: 10px;
+    --group-gap-expanded: 0px;
 
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px; /* 收起时三组之间的基础间距 */
+    gap: var(--group-gap-collapsed); /* 收起时三组之间的基础间距 */
+}
+
+#rightColumn:has(.groupFold.expanded) {
+    gap: var(--group-gap-expanded);
 }
 
 #captureGroup,
@@ -497,7 +600,7 @@
 
 .captureIcon {
         width: auto;
-        height: 20px;
+        height: 24px;
     object-fit: contain;  /* 保持图标比例 */
     pointer-events: none; /* 点击事件传给按钮 */
 }
@@ -559,7 +662,7 @@
 
 .videoIcon {
         width: auto;
-        height: 20px;
+        height: 24px;
     object-fit: contain;  /* 保持图标比例 */
     pointer-events: none; /* 点击事件传给按钮 */
 }
@@ -604,22 +707,19 @@
 
 .physicsIcon {
     width: auto;
-    height: 20px;
+    height: 24px;
     object-fit: contain;  /* 保持图标比例 */
     pointer-events: none; /* 点击事件传给按钮 */
 }
 #physicsGroup .groupContent.physicsFlat{
-    display:flex;
-    flex-direction:wrap;
-    align-items:flex-start;
-    gap:0px;
+    display:block;
+    position:relative;
+    width:150px;
+    height:215px;
+    overflow:visible;
 }
 #physicsGroup .physicsRow{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:auto;
-    gap:6px;
-    width:100%;
+    display:contents;
 }
 /* 图片自适应，保留比例 */
 #physicsGroup .subBtn img {
@@ -629,13 +729,31 @@
     max-height: 100%;
     pointer-events: none; /* 点击传给按钮 */
 }
+
+#physicsGroup .subBtn {
+    position:absolute;
+    left:var(--physics-x, 0px);
+    top:var(--physics-y, 0px);
+}
+
+#btnModeMagnet { --physics-x: 10px; --physics-y: 0px; }
+#btnShapePath { --physics-x: 75px; --physics-y: 12px; }
+#btnShapeLoop { --physics-x: 30px; --physics-y: 30px; }
+#btnBindIn { --physics-x: 30px; --physics-y: 48px; }
+#btnBindOut { --physics-x: 55px; --physics-y: 55px; }
+#btnMagnetClear { --physics-x: 40px; --physics-y: 75px; }
+#btnGravityOff { --physics-x: 55px; --physics-y: 100px; }
+#btnGravityOn { --physics-x: 20px; --physics-y: 130px; }
+#btnShuffleOff { --physics-x: 30px; --physics-y: 150px; }
+#btnShuffleOn { --physics-x: 8px; --physics-y: 190px; }
+#btnFxMBlur { --physics-x: 0px; --physics-y: 230px; }
 /* ================= Physics 子按钮图标尺寸 ================= */
 
 /* MAGNET */
 #btnModeMagnet img {
     width: 65px;
     height: auto;
-    margin-right: 50px;
+    margin-right: 20px!important;
     margin-top: 0;
 }
 
@@ -676,7 +794,7 @@
 
 /* Gravity OFF  */
 #btnGravityOff img {
-    width: 85px!important;
+    width: 95px!important;
     height: auto!important;
     margin-right: 0px!important;
     margin-top: 8px!important;
@@ -690,9 +808,12 @@
     margin-top: 0;
 }
 /* Shuffle OFF / ON */
-#btnShuffleOff img, #btnShuffleOn img {
-    width: 50px;
+#physicsGroup #btnShuffleOff img,
+#physicsGroup #btnShuffleOn img {
+    width: 85px;
     height: auto;
+    max-width: none;
+    max-height: none;
     margin-left: 5px;
     margin-top: 0;
 }
@@ -787,7 +908,6 @@
                 <button id="btnClearAll" class="subBtn">
                     <img src="assets/clear.png" alt="Clear">
                 </button>
-        <button id="btnEdit" class="primary disabled">Edit</button>
 
         </div>
     </div>
@@ -826,7 +946,7 @@
             <button id="btnVidBlur" class="subBtn">
                 <img src="assets/vblur.png" alt="V-Blur">
             </button>
-            <input id="vidBlur" type="range" min="0" max="18" value="0" style="width:110px;">
+            <input id="vidBlur" type="range" min="0" max="18" value="0" style="width:110px; display:none;">
         </div>
     </div>
 
@@ -885,12 +1005,7 @@
         <img src="assets/shuffleon.png" alt="Shuffle ON">
       </button>
 
-    <!-- M-Blur -->
-    <div class="physicsRow">
-      <button id="btnFxMBlur" class="subBtn">
-        <img src="assets/mblur.png" alt="M-Blur">
-      </button>
-    </div>
+    <!-- M-Blur removed -->
 
   </div>
 </div>
@@ -953,14 +1068,23 @@
 </div>
     
 <!-- ==================== Library 面板 ==================== -->
-    <div id="libPanel">
-      <div class="row">
-        <button id="btnLibClose">Close</button><!-- 关闭 Library -->
-        <button id="btnLibClear">Clear</button><!-- 清空 Library -->
-        <button id="btnOpenArchive" class="primary">Open Archive</button>
+    <div id="libPanelWrap">
+      <div id="libPanel">
+        <div class="row">
+          <button id="btnLibClear">Clear</button>
+          <button id="btnLibDelete">Delete</button>
+        </div>
+        <h3>LIBRARY</h3>
+        <div id="libList" class="small"></div>
       </div>
-      <h3>LIBRARY</h3>
-      <div id="libList" class="small"></div>
+      <div id="libScrollbar">
+        <button id="btnLibClose">
+          <img src="assets/close.png" style="width:18px; height:18px;">
+        </button>
+        <div id="libScrollTrack">
+          <div id="libScrollThumb"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -996,29 +1120,8 @@
   <!-- ==================== 编辑栏 Editbar ==================== -->
   <div id="editbar">
     <div class="seg">
-        <!-- 原来的 <span class="pill">distort</span> -->
-        <!-- ✅ 改成可点击按钮，同时绑定 id -->
         <button id="btnFxDistort" class="primary">Distort</button>
-
-        <!-- distort 滑块容器，初始隐藏 -->
-        <span id="distortControls" style="display:none;">
-            <span class="pill">
-                radius
-                <input id="radius" type="range" min="10" max="220" value="120">
-            </span>
-            <span class="pill">
-                strength
-                <input id="strength" type="range" min="-100" max="100" value="85">
-            </span>
-        </span>
         <button id="btnFxBlur" class="primary">Blur</button>
-        <!-- Blur 滑块容器，初始隐藏 -->
-        <span id="blurControls" style="display:none;">
-            <span class="pill">
-                strength
-                <input id="blurStrength" type="range" min="1" max="30" value="1">
-            </span>
-        </span>
         <button id="btnFxBW" class="primary">B&W</button>
         <button id="btnFxNoise" class="primary">Noise</button>
 
@@ -1028,6 +1131,25 @@
 
     <button id="btnUndoPaint">undo</button>
     <button id="btnDone" class="danger">done</button>
+    </div>
+  </div>
+
+  <!-- ==================== 独立控制面板 ==================== -->
+  <div id="brushPanel" style="display:none;">
+    <div class="seg">
+      <span class="pill">
+        radius
+        <input id="radius" type="range" min="4" max="120" value="30" />
+        <span id="radiusVal">30</span>
+      </span>
+
+      <span class="pill">
+        strength
+        <input id="strength" type="range" min="-100" max="100" value="50" />
+        <span id="strengthVal">50</span>
+      </span>
+
+      <button id="btnBrushDone" class="primary">done</button>
     </div>
   </div>
 
@@ -1054,12 +1176,16 @@
       
       // 编辑栏
       const editbar = document.getElementById("editbar");
+      const brushPanel = document.getElementById("brushPanel");
       const radiusEl = document.getElementById("radius");
       const strengthEl = document.getElementById("strength");
+      const radiusValEl = document.getElementById("radiusVal");
+      const strengthValEl = document.getElementById("strengthVal");
       const btnFxSide = document.getElementById("btnFxSide");
       const btnFxMosaic = document.getElementById("btnFxMosaic");
 
       // Library 面板
+      const libPanelWrap = document.getElementById("libPanelWrap");
       const libPanel = document.getElementById("libPanel");
       const libList  = document.getElementById("libList");
 
@@ -1071,7 +1197,6 @@
 
       // 全局按钮Save/Edit/Delete
       const btnSave = document.getElementById("btnSave");
-      const btnEdit = document.getElementById("btnEdit");
       const btnDeleteSelected = document.getElementById("btnDeleteSelected");
 
       // Grid 相关
@@ -1108,34 +1233,24 @@
             group.classList.toggle("expanded"); // 切换展开状态
         });
     });
-
     
     // ===== distort=====
-    const btnFxDistort = document.getElementById("btnFxDistort");
-    const distortControls = document.getElementById("distortControls");
+const btnFxDistort = document.getElementById("btnFxDistort");
 
-    // 核心处理函数：根据 radius 和 strength 处理 distort
-    function updateDistort(){
-        const r = radiusEl.value;
-        const s = strengthEl.value;
+let radiusValue = 0;
+let strengthValue = 0;
 
-        // 这里写你的 distort 逻辑
-        // 例如画 canvas 或处理图像
-        console.log("distort update:", r, s); // 暂时用 log 占位
-    }
-
-    // 滑块事件：实时更新
-    radiusEl.addEventListener("input", updateDistort);
-    strengthEl.addEventListener("input", updateDistort);
+function updateDistort(){
+    const r = radiusValue;
+    const s = strengthValue;
+    console.log("distort update:", r, s);
+}
 
     // 按钮点击事件：切换显示 + 调用一次效果
     btnFxDistort.addEventListener("click", () => {
-        const visible = distortControls.style.display === "flex";
-        distortControls.style.display = visible ? "none" : "flex";
-
-        btnFxDistort.classList.toggle("active"); // 高亮按钮
-
-        // 点击按钮时也执行一次效果
+        editMode = "stretch";
+        brushPanel.style.display = brushPanel.style.display === "flex" ? "none" : "flex";
+        btnFxDistort.classList.toggle("active");
         updateDistort();
     });
 
@@ -1144,7 +1259,6 @@
 let editBlurFx = { active: false, radius: 10 };
 
 const blurBtn = document.getElementById("btnFxBlur");
-const blurControls = document.getElementById("blurControls");
 
 // ===== 重绘 canvas 并应用模糊 =====
 function redrawDrawLayer() {
@@ -1170,13 +1284,10 @@ function applyEditBlur() {
   blurBtn.classList.toggle("active", editBlurFx.active);
 }
 
-// 滑块事件绑定
-radiusEl.addEventListener("input", applyEditBlur);
-
 // 点击按钮显示/隐藏滑块
 blurBtn.addEventListener("click", () => {
-  const visible = blurControls.style.display === "flex";
-  blurControls.style.display = visible ? "none" : "flex";
+  editMode = "mblur";
+  brushPanel.style.display = brushPanel.style.display === "flex" ? "none" : "flex";
 });
 
     // ===== MAGNET v2: Shape Field (LOOP / PATH) + Dock binding =====
@@ -1262,7 +1373,6 @@ blurBtn.addEventListener("click", () => {
 
     function setActionEnabled(enabled){
       btnSave.classList.toggle("disabled", !enabled);
-      btnEdit.classList.toggle("disabled", !enabled);
       btnDeleteSelected?.classList.toggle("disabled", !enabled);
     }
 
@@ -1277,6 +1387,7 @@ blurBtn.addEventListener("click", () => {
 
     let stickers = [];
     let selected = null;
+    let funcCircleOpen = false;
 
     let editMode = "stretch";
     let paintUndoStack = [];
@@ -1717,58 +1828,33 @@ async function initModel(){
   try{
     loader.innerText = "准备加载 MediaPipe…";
 
-    // ✅ 本地同源 import（iPad Safari 不会 CORS 挡）
-    loader.innerText = "加载 vision_bundle（local ./vendor/vision_bundle.mjs）…";
-
-    let mod = null;
-    try{
-      mod = await import("./vendor/vision_bundle.mjs");
-      console.log("loaded keys:", Object.keys(mod));
-    }catch(e){
-      console.error("import local vendor failed:", e);
-      loader.innerText = "vision_bundle 本地加载失败：\n" + (e?.message || String(e));
-      return;
-    }
-
+    const mod = await import("./vendor/vision_bundle.mjs");
     InteractiveSegmenter = mod.InteractiveSegmenter;
     FilesetResolver = mod.FilesetResolver;
 
-    // ===== 加载 WASM（用你仓库 ./vendor/ 下的文件）=====
-    loader.innerText = "正在下载 WASM（local ./vendor/）…";
+    loader.innerText = "初始化 Vision…";
 
-    // fetch + arrayBuffer + compile 替代 compileStreaming
-    const wasmResponse = await fetch("./vendor/vision_wasm_internal.wasm");
-    if (!wasmResponse.ok) throw new Error(`WASM fetch failed: ${wasmResponse.status}`);
-    const wasmBuffer = await wasmResponse.arrayBuffer();
-    const wasmModule = await WebAssembly.compile(wasmBuffer);
-
-    console.log("WASM Module compiled successfully");
-
-    // ===== 初始化 FilesetResolver，用本地模块和已编译 WASM =====
     const vision = await FilesetResolver.forVisionTasks("./vendor/");
 
-    // ===== 加载模型 =====
-    loader.innerText = "正在加载模型（CPU）…";
+    loader.innerText = "加载模型…";
 
-    interactiveSegmenter = await InteractiveSegmenter.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: "./models/magic_touch.tflite",
-        delegate: "CPU",
-        wasmModule: wasmModule, // ✅ 使用本地已编译模块
-      },
-      outputCategoryMask: true,
-      outputConfidenceMasks: false
-    });
+    interactiveSegmenter =
+      await InteractiveSegmenter.createFromOptions(vision,{
+        baseOptions:{
+          modelAssetPath:"./models/magic_touch.tflite",
+          delegate:"CPU"
+        },
+        outputCategoryMask:true,
+        outputConfidenceMasks:false
+      });
 
-    loader.innerText = "模型就绪（CPU），请开启相机";
-    console.log("InteractiveSegmenter initialized successfully");
+    loader.innerText = "模型就绪（点 Start Camera）";
 
   }catch(err){
     console.error(err);
-    loader.innerText = "模型加载失败:\n" + (err?.message || String(err));
+    loader.innerText = "模型加载失败";
   }
 }
-
 
     const btnModeMP   = document.getElementById("btnModeMP");
     const btnModeRect = document.getElementById("btnModeRect");
@@ -2088,6 +2174,8 @@ async function initModel(){
       el.addEventListener("pointerdown", (e)=>{
         if (!alphaHitTest(el, e.clientX, e.clientY)) return;
 
+        if (funcCircleOpen) return;
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -2105,7 +2193,7 @@ async function initModel(){
         st._physLock = true;
         st.vx = st.vy = st.av = 0;
 
-        if (editbar.style.display === "flex") {
+        if (editbar.style.display === "flex" || brushPanel.style.display === "flex") {
           lastLocal = getLocalPointOnCanvas(el, e.clientX, e.clientY);
 
           const ctx = el.getContext("2d");
@@ -2126,7 +2214,7 @@ async function initModel(){
         const dy = e.clientY - startY;
         const dist = Math.hypot(dx, dy);
 
-        if (editbar.style.display !== "flex") {
+        if (editbar.style.display !== "flex" && !funcCircleOpen && brushPanel.style.display !== "flex") {
           if (dist > DRAG_THRESHOLD) moved = true;
           if (!moved) return;
 
@@ -2635,7 +2723,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
         e.target.closest(".topbar") ||
         e.target.closest("#editbar") ||
         e.target.closest("#gridbar") ||  
-        e.target.closest("#libPanel")
+        e.target.closest("#libPanelWrap")
       ) return;
 
       if (!video.srcObject) { showHint("先点 Start Camera", 900); return; }
@@ -3176,12 +3264,18 @@ async function refreshLibraryUI(){
   items.forEach((it, idx)=>{
     const wrap = document.createElement("div");
     wrap.style.marginBottom = "10px";
+    wrap.dataset.libId = it.id || "";
+    wrap.dataset.libPath = it.path || "";
 
     const img = document.createElement("img");
     img.className = "thumb";
     img.src = it.image_url || it.dataURL;
     img.title = `#${idx+1}`;
     img.addEventListener("click", ()=>{
+      if (libDeleteMode) {
+        wrap.classList.toggle("lib-selected");
+        return;
+      }
       addStickerFromDataURL(it.image_url || it.dataURL, it.w, it.h);
     });
 
@@ -3385,6 +3479,7 @@ async function renderArchiveGrid(){
     videoFx.blur = !videoFx.blur;
     if (videoFx.blur && videoFx.blurPx === 0) videoFx.blurPx = 6;
     applyVideoFilter();
+    vidBlurEl.style.display = videoFx.blur ? "block" : "none";
     showHint(videoFx.blur ? `Video Blur ${videoFx.blurPx}px` : "Video Blur OFF", 700);
     });
 
@@ -3417,14 +3512,6 @@ btnSave.addEventListener("click", async ()=>{
   }
 });
 
-    btnEdit.addEventListener("click", ()=>{
-      if (!selected) return;
-      editbar.style.display = "flex";
-      paintUndoStack = [];
-      editMode = "stretch"; 
-      showHint("edit：拖动=拉伸；双指=旋转缩放；Done 退出；顶栏可切 Mosaic / M-Blur", 1300);
-    });
-
     document.getElementById("btnFxBlur").addEventListener("click", ()=>{
     if (!selected) return;
 
@@ -3452,7 +3539,6 @@ btnSave.addEventListener("click", async ()=>{
     });
 
     // ===== Mosaic 工具 =====
-    const btnFxMBlur  = document.getElementById("btnFxMBlur");
 
     btnFxMosaic.addEventListener("click", ()=>{
       if (!selected) return;
@@ -3460,12 +3546,7 @@ btnSave.addEventListener("click", async ()=>{
       showHint("Mosaic brush：拖动涂抹方块马赛克", 900);
     });
 
-    btnFxMBlur.addEventListener("click", ()=>{
-      if (!selected) return;
-      editMode = "mblur";
-      showHint("M-Blur brush：拖动涂抹局部模糊", 900);
-    });
-    
+
     document.getElementById("btnFxSide").addEventListener("click", ()=>{
       if (!selected) return;
 
@@ -3514,9 +3595,23 @@ btnSave.addEventListener("click", async ()=>{
       showHint("exit Edit", 800);
     });
 
+    document.getElementById("btnBrushDone").addEventListener("click", ()=>{
+      brushPanel.style.display = "none";
+      editMode = "stretch";
+      paintUndoStack = [];
+      showHint("done", 800);
+    });
+
+    radiusEl.addEventListener("input", ()=>{
+      radiusValEl.textContent = radiusEl.value;
+    });
+    strengthEl.addEventListener("input", ()=>{
+      strengthValEl.textContent = strengthEl.value;
+    });
+
 document.getElementById("btnLibrary").addEventListener("click", async ()=>{
-  libPanel.style.display = (!libPanel.style.display || libPanel.style.display === "none") ? "block" : "none";
-  if (libPanel.style.display === "block"){
+  libPanelWrap.style.display = (!libPanelWrap.style.display || libPanelWrap.style.display === "none") ? "flex" : "none";
+  if (libPanelWrap.style.display === "flex"){
     await refreshLibraryUI();
   }
 });
@@ -3533,8 +3628,68 @@ archiveOverlay?.addEventListener("click", (e)=>{
 });
 
     document.getElementById("btnLibClose").addEventListener("click", ()=>{
-      libPanel.style.display = "none";
+      libPanelWrap.style.display = "none";
     });
+
+    // 自定义滚动条
+    (function setupLibScrollbar(){
+      const track = document.getElementById("libScrollTrack");
+      const thumb = document.getElementById("libScrollThumb");
+      if (!track || !thumb || !libPanel) return;
+
+      function updateThumb(){
+        const sH = libPanel.scrollHeight;
+        const cH = libPanel.clientHeight;
+        if (sH <= cH){
+          thumb.style.display = "none";
+          return;
+        }
+        thumb.style.display = "block";
+        const trackH = track.clientHeight;
+        const thumbH = thumb.offsetHeight;
+        const maxScroll = sH - cH;
+        const ratio = libPanel.scrollTop / maxScroll;
+        const top = ratio * (trackH - thumbH);
+        thumb.style.top = top + "px";
+      }
+
+      libPanel.addEventListener("scroll", updateThumb);
+
+      let dragging = false;
+      let startY = 0;
+      let startScroll = 0;
+      thumb.addEventListener("pointerdown", (e)=>{
+        dragging = true;
+        startY = e.clientY;
+        startScroll = libPanel.scrollTop;
+        thumb.setPointerCapture(e.pointerId);
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      thumb.addEventListener("pointermove", (e)=>{
+        if (!dragging) return;
+        const trackH = track.clientHeight;
+        const thumbH = thumb.offsetHeight;
+        const dy = e.clientY - startY;
+        const sH = libPanel.scrollHeight;
+        const cH = libPanel.clientHeight;
+        const maxScroll = sH - cH;
+        const scrollDelta = dy * maxScroll / (trackH - thumbH);
+        libPanel.scrollTop = startScroll + scrollDelta;
+      });
+      thumb.addEventListener("pointerup", (e)=>{
+        dragging = false;
+        try { thumb.releasePointerCapture(e.pointerId); } catch {}
+      });
+
+      // observe panel size and content changes
+      const ro = new ResizeObserver(updateThumb);
+      ro.observe(libPanel);
+      const mo = new MutationObserver(updateThumb);
+      mo.observe(libPanel, { childList: true, subtree: true });
+      window.addEventListener("resize", updateThumb);
+      requestAnimationFrame(updateThumb);
+    })();
 
 document.getElementById("btnLibClear").addEventListener("click", async ()=>{
   if (!confirm("Clear library?")) return;
@@ -3550,6 +3705,50 @@ document.getElementById("btnLibClear").addEventListener("click", async ()=>{
     console.error(err);
     showHint("clear failed", 1200);
   }
+});
+
+let libDeleteMode = false;
+
+document.getElementById("btnLibDelete").addEventListener("click", async ()=>{
+  if (!libDeleteMode) {
+    libDeleteMode = true;
+    document.getElementById("btnLibDelete").textContent = "Confirm";
+    showHint("Tap items to select, then Confirm", 1200);
+    return;
+  }
+
+  const selected = libList.querySelectorAll(".lib-selected");
+  if (!selected.length) {
+    libDeleteMode = false;
+    document.getElementById("btnLibDelete").textContent = "Delete";
+    showHint("No items selected", 800);
+    return;
+  }
+
+  try {
+    const ids = [];
+    const paths = [];
+    selected.forEach(wrap => {
+      if (wrap.dataset.libId) ids.push(wrap.dataset.libId);
+      if (wrap.dataset.libPath) paths.push(wrap.dataset.libPath);
+    });
+
+    if (paths.length) {
+      await supabase.storage.from(BUCKET_NAME).remove(paths);
+    }
+    if (ids.length) {
+      await supabase.from("library_items").delete().in("id", ids);
+    }
+
+    await refreshLibraryUI();
+    showHint(`Deleted ${selected.length} item(s)`, 900);
+  } catch(err) {
+    console.error(err);
+    showHint("Delete failed", 1200);
+  }
+
+  libDeleteMode = false;
+  document.getElementById("btnLibDelete").textContent = "Delete";
 });
 
     btnDeleteSelected.addEventListener("click", ()=>{
@@ -3809,8 +4008,7 @@ function gravityTick(t){
   const jitter = 0.25; // rad/s^2（越大越晃）
   
   for (const st of stickers){
-    // 手在拖 / 编辑时不参与物理
-    if (st._physLock) continue;
+    if (st._physLock || funcCircleOpen) continue;
 
     // 初始化（兼容旧 sticker）
     st.vx ??= 0; st.vy ??= 0; st.av ??= 0;
@@ -4013,6 +4211,416 @@ window.addEventListener("keydown", (e)=>{
     resizeDrawLayer();
     refreshLibraryUI().catch(console.error);
     initModel();
+// ==============================点击sticker进入edit ======
+// ======================== Sticker 点击 → 只打开功能环 ========================
+stage.addEventListener("pointerup", (e) => {
+    const sticker = e.target.closest(".sticker");
+    if (!sticker) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    editbar.style.display = "none";
+
+    const _oldCircle = document.getElementById("funcCircleContainer");
+    if (_oldCircle) (_oldCircle._close || (() => _oldCircle.remove()))();
+
+    funcCircleOpen = true;
+
+    document.querySelectorAll(".sticker").forEach(s=>{
+        s.classList.remove("selected");
+    });
+    sticker.classList.add("selected");
+
+    const _rect = sticker.getBoundingClientRect();
+    const _cx = _rect.left + _rect.width / 2;
+    const _cy = _rect.top + _rect.height / 2;
+    showFunctionCircle(_cx, _cy);
+}, true);
+
+// ======================== 功能环函数 ========================
+function showFunctionCircle(initCx, initCy) {
+    const funcs = [
+        { name: "Distort", png: "distort.png", id: "distort" },
+        { name: "Blur",    png: "blur.png",    id: "blur"    },
+        { name: "B&W",     png: "bw.png",      id: "bw"      },
+        { name: "Noise",   png: "noise.png",   id: "noise"   },
+        { name: "Side",    png: "side.png",     id: "side"    },
+        { name: "Mosaic",  png: "mosaic.png",   id: "mosaic"  }
+    ];
+
+    const _existing = document.getElementById("funcCircleContainer");
+    if (_existing) (_existing._close || (() => _existing.remove()))();
+
+    const container = document.createElement("div");
+    container.id = "funcCircleContainer";
+    container.style.position = "absolute";
+    container.style.left = "0";
+    container.style.top  = "0";
+    container.style.width = "100%";
+    container.style.height = "100%";
+    container.style.pointerEvents = "none";
+    document.body.appendChild(container);
+
+    let ringCx = initCx;
+    let ringCy = initCy;
+    let radiusPx = 80;
+    const angleStep = (Math.PI * 2) / funcs.length;
+
+    function closeCircle() {
+        document.removeEventListener("pointermove", onDocPointerMove);
+        document.removeEventListener("pointerup",   onDocPointerUp);
+        document.removeEventListener("pointerdown", onDocOutsideDown);
+        if (container.parentNode) container.parentNode.removeChild(container);
+        document.querySelectorAll(".sticker.selected").forEach(s => s.classList.remove("selected"));
+        funcCircleOpen = false;
+    }
+    container._close = closeCircle;
+
+    // pointer indicator line
+    const pointerLine = document.createElement("div");
+    pointerLine.style.position = "absolute";
+    pointerLine.style.width = "2px";
+    pointerLine.style.height = (radiusPx - 10) + "px";
+    pointerLine.style.background = "rgba(255,255,255,0.6)";
+    pointerLine.style.transformOrigin = "50% 0%";
+    pointerLine.style.pointerEvents = "none";
+    pointerLine.style.borderRadius = "1px";
+    pointerLine.style.display = "none";
+    container.appendChild(pointerLine);
+
+    function updatePointerLine(angle) {
+        pointerLine.style.left = ringCx + "px";
+        pointerLine.style.top  = ringCy + "px";
+        pointerLine.style.height = (radiusPx - 10) + "px";
+        pointerLine.style.transform = "translate(-50%, 0) rotate(" + (angle + Math.PI / 2) + "rad)";
+    }
+
+    // hit area for ring drag-to-move
+    const hitArea = document.createElement("div");
+    hitArea.id = "funcCircleHitArea";
+    hitArea.style.position = "absolute";
+    hitArea.style.borderRadius = "50%";
+    hitArea.style.pointerEvents = "auto";
+    hitArea.style.cursor = "grab";
+    container.appendChild(hitArea);
+
+    function updateHitArea() {
+        const size = (radiusPx + 30) * 2;
+        hitArea.style.width  = size + "px";
+        hitArea.style.height = size + "px";
+        hitArea.style.left   = (ringCx - size / 2) + "px";
+        hitArea.style.top    = (ringCy - size / 2) + "px";
+    }
+
+    // center disc
+    const centerImg = document.createElement("img");
+    centerImg.src = "assets/round.png";
+    centerImg.id  = "funcCircleCenter";
+    centerImg.style.position = "absolute";
+    centerImg.style.width  = "50px";
+    centerImg.style.height = "50px";
+    centerImg.style.pointerEvents = "auto";
+    centerImg.style.touchAction = "none";
+    centerImg.style.transform = "translate(-50%, -50%)";
+    centerImg.style.left = ringCx + "px";
+    centerImg.style.top  = ringCy + "px";
+    centerImg.style.zIndex = "2";
+    container.appendChild(centerImg);
+
+    // function buttons
+    const btnEls = [];
+    funcs.forEach((func, i) => {
+        const btn = document.createElement("button");
+        btn.className = "funcCircleBtn";
+        btn.dataset.funcIdx = i;
+        btn.style.position = "absolute";
+        btn.style.pointerEvents = "auto";
+        btn.style.border = "none";
+        btn.style.background = "none";
+        btn.style.padding = "0";
+        btn.style.cursor = "pointer";
+        btn.style.transition = "transform 0.1s, filter 0.1s";
+        btn.style.transform = "translate(-50%, -50%)";
+
+        const img = document.createElement("img");
+        img.src = "assets/" + func.png;
+        img.alt = func.name;
+        img.style.width = "45px";
+        img.style.height = "auto";
+        img.draggable = false;
+
+        btn.appendChild(img);
+        container.appendChild(btn);
+        btnEls.push(btn);
+
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const cx = ringCx, cy = ringCy;
+            closeCircle();
+            openCircularControl(func.id, cx, cy);
+        });
+    });
+
+    function updateButtons() {
+        funcs.forEach((func, i) => {
+            const angle = i * angleStep - Math.PI / 2;
+            btnEls[i].style.left = (ringCx + radiusPx * Math.cos(angle)) + "px";
+            btnEls[i].style.top  = (ringCy + radiusPx * Math.sin(angle)) + "px";
+        });
+    }
+
+    function highlightNearest(pointerAngle) {
+        let bestIdx = -1;
+        let bestDist = Infinity;
+        funcs.forEach((func, i) => {
+            const btnAngle = i * angleStep - Math.PI / 2;
+            let diff = pointerAngle - btnAngle;
+            while (diff > Math.PI) diff -= 2 * Math.PI;
+            while (diff < -Math.PI) diff += 2 * Math.PI;
+            const absDiff = Math.abs(diff);
+            if (absDiff < bestDist) {
+                bestDist = absDiff;
+                bestIdx = i;
+            }
+        });
+        btnEls.forEach((btn, i) => {
+            if (i === bestIdx) {
+                btn.style.transform = "translate(-50%, -50%) scale(1.35)";
+                btn.style.filter = "brightness(1.4)";
+            } else {
+                btn.style.transform = "translate(-50%, -50%) scale(1)";
+                btn.style.filter = "none";
+            }
+        });
+        return bestIdx;
+    }
+
+    function clearHighlight() {
+        btnEls.forEach(btn => {
+            btn.style.transform = "translate(-50%, -50%) scale(1)";
+            btn.style.filter = "none";
+        });
+    }
+
+    // interaction state
+    let dialDragging = false;
+    let hoveredIdx = -1;
+    let isMoving = false;
+    let moveStartX = 0, moveStartY = 0;
+    let moveBaseCx = 0, moveBaseCy = 0;
+
+    // center disc: selector dial
+    centerImg.addEventListener("pointerdown", (e) => {
+        dialDragging = true;
+        hoveredIdx = -1;
+        e.preventDefault();
+        e.stopPropagation();
+        centerImg.setPointerCapture(e.pointerId);
+        pointerLine.style.display = "block";
+        const angle = Math.atan2(e.clientY - ringCy, e.clientX - ringCx);
+        updatePointerLine(angle);
+        hoveredIdx = highlightNearest(angle);
+    });
+
+    // ring area: drag to move
+    hitArea.addEventListener("pointerdown", (e) => {
+        if (e.target !== hitArea) return;
+        isMoving = true;
+        e.preventDefault();
+        e.stopPropagation();
+        moveStartX = e.clientX;
+        moveStartY = e.clientY;
+        moveBaseCx = ringCx;
+        moveBaseCy = ringCy;
+        hitArea.setPointerCapture(e.pointerId);
+        hitArea.style.cursor = "grabbing";
+    });
+
+    function onDocPointerMove(e) {
+        if (dialDragging) {
+            const angle = Math.atan2(e.clientY - ringCy, e.clientX - ringCx);
+            updatePointerLine(angle);
+            hoveredIdx = highlightNearest(angle);
+            return;
+        }
+        if (isMoving) {
+            const dx = e.clientX - moveStartX;
+            const dy = e.clientY - moveStartY;
+            ringCx = moveBaseCx + dx;
+            ringCy = moveBaseCy + dy;
+            centerImg.style.left = ringCx + "px";
+            centerImg.style.top  = ringCy + "px";
+            updateButtons();
+            updateHitArea();
+            pointerLine.style.display = "none";
+        }
+    }
+
+    function onDocPointerUp() {
+        if (dialDragging) {
+            dialDragging = false;
+            pointerLine.style.display = "none";
+            if (hoveredIdx >= 0) {
+                const func = funcs[hoveredIdx];
+                const cx = ringCx, cy = ringCy;
+                closeCircle();
+                openCircularControl(func.id, cx, cy);
+                return;
+            }
+            clearHighlight();
+        }
+        if (isMoving) {
+            isMoving = false;
+            hitArea.style.cursor = "grab";
+        }
+    }
+
+    document.addEventListener("pointermove", onDocPointerMove);
+    document.addEventListener("pointerup", onDocPointerUp);
+
+    // pinch to resize
+    let pinchStartDist = 0;
+    let pinchStartRadius = 0;
+
+    container.addEventListener("touchstart", e => {
+        if (e.touches.length === 2) {
+            const dx = e.touches[1].clientX - e.touches[0].clientX;
+            const dy = e.touches[1].clientY - e.touches[0].clientY;
+            pinchStartDist = Math.hypot(dx, dy);
+            pinchStartRadius = radiusPx;
+        }
+    });
+
+    container.addEventListener("touchmove", e => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const dx = e.touches[1].clientX - e.touches[0].clientX;
+            const dy = e.touches[1].clientY - e.touches[0].clientY;
+            const newDist = Math.hypot(dx, dy);
+            radiusPx = Math.max(40, Math.min(200, pinchStartRadius + newDist - pinchStartDist));
+            updateButtons();
+            updateHitArea();
+        }
+    });
+
+    // initial layout
+    updateButtons();
+    updateHitArea();
+
+    // close on outside click
+    document.addEventListener("pointerdown", onDocOutsideDown);
+    function onDocOutsideDown(e) {
+        if (e.target.closest("#funcCircleContainer")) return;
+        if (e.target.closest(".sticker")) return;
+        closeCircle();
+    }
+}
+
+// ======================== 功能环 → 调用真实编辑函数 ========================
+function closePanels() {
+    brushPanel.style.display = "none";
+    sidebar.style.display = "none";
+}
+
+function openCircularControl(funcId, cx, cy) {
+    if (!selected) return;
+    closePanels();
+    switch(funcId){
+        case "distort":
+            editMode = "stretch";
+            brushPanel.style.display = "flex";
+            showHint("Distort brush: drag on sticker", 900);
+            break;
+        case "blur":
+            editMode = "mblur";
+            brushPanel.style.display = "flex";
+            showHint("Blur brush: drag on sticker", 900);
+            break;
+        case "bw":
+            applyBlackWhite();
+            showHint("B&W applied", 650);
+            break;
+        case "noise": {
+            const amt = Math.abs(parseInt(strengthEl.value, 10)) / 100;
+            applyNoise(clamp(amt * 0.35, 0.05, 0.45));
+            showHint("Noise applied", 650);
+            break;
+        }
+        case "side": {
+            const on = (sidebar.style.display !== "flex");
+            sidebar.style.display = on ? "flex" : "none";
+            if (on){
+                selected._sideBase = null;
+                const maxLen = parseInt(sideLenEl.max, 10) || 60;
+                ensureCanvasPadding(selected, 60 * 2 + 10);
+                snapshotStickerBase(selected);
+                previewSide();
+                showHint("Side controls", 700);
+            } else {
+                showHint("Side panel closed", 600);
+            }
+            break;
+        }
+        case "mosaic":
+            editMode = "mosaic";
+            brushPanel.style.display = "flex";
+            showHint("Mosaic brush: drag on sticker", 900);
+            break;
+    }
+}
+
+// ======================== 圆圈控件生成函数 ========================
+function showCircularSelector(cx, cy, minVal, maxVal, imgPathPrefix, applyFunc) {
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "0px";
+    container.style.top = "0px";
+    container.style.width = "100%";
+    container.style.height = "100%";
+    container.style.pointerEvents = "none";
+    document.body.appendChild(container);
+
+    const radiusPx = 80;
+    const total = maxVal - minVal + 1;
+    const angleStep = 2*Math.PI / total;
+
+    for(let i = minVal; i <= maxVal; i++) {
+        const btn = document.createElement("button");
+        btn.className = "subBtn";
+        btn.style.position = "absolute";
+        btn.style.pointerEvents = "auto";
+        btn.style.border = "none";
+        btn.style.background = "none";
+        btn.style.padding = "0";
+        btn.style.transform = "translate(-50%, -50%)";
+
+        const angle = (i - minVal)*angleStep - Math.PI/2;
+        const x = cx + radiusPx*Math.cos(angle);
+        const y = cy + radiusPx*Math.sin(angle);
+        btn.style.left = x+"px";
+        btn.style.top = y+"px";
+
+        const img = document.createElement("img");
+        img.src = `${imgPathPrefix}_${i}.png`;
+        img.style.width = "30px";
+        img.style.height = "30px";
+        btn.appendChild(img);
+
+        btn.addEventListener("click", () => {
+            applyFunc(i);
+            document.body.removeChild(container);
+        });
+
+        container.appendChild(btn);
+    }
+
+    container.addEventListener("click", e => {
+        if(e.target === container) document.body.removeChild(container);
+    });
+}
+
   </script>
 </body>
 </html>
