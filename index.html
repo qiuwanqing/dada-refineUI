@@ -376,6 +376,7 @@
       flex-direction: row;
       width: 240px;
       max-height: 70vh;
+      min-width: 240px;
     }
     #libPanel{
       flex:1;
@@ -429,6 +430,37 @@
       cursor: grabbing;
     }
 
+    /* Resize Handle for Library Panel */
+    #libResizeHandle {
+      position: absolute;
+      right: -4px;
+      top: 0;
+      width: 8px;
+      height: 100%;
+      cursor: ew-resize;
+      background: transparent;
+      transition: background 0.15s;
+      z-index: 61;
+    }
+
+    #libResizeHandle:hover {
+      background: rgba(91, 183, 255, 0.4);
+    }
+
+    #libResizeHandle:active {
+      background: rgba(91, 183, 255, 0.7);
+    }
+
+    /* Floating buttons - 覆盖 groupContent 和 disabled 的限制 */
+    .floating-button {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+      display: flex !important;
+      visibility: visible !important;
+    }
+
 
 /* 自定义滚动条 — 隐藏原生滚动条 */
 #libPanel::-webkit-scrollbar {
@@ -470,8 +502,9 @@
     /* ================= Library 缩略图三列布局 ================= */
     #libList {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 三列 */
+    grid-template-columns: repeat(3, 1fr); /* 三列（默认，会被 JS 动态调整） */
     gap: 6px;            /* 列与列、行与行之间间距 */
+    transition: grid-template-columns 0.2s ease;
     }
 
     #libList .subBtn {
@@ -1085,6 +1118,7 @@
           <div id="libScrollThumb"></div>
         </div>
       </div>
+      <div id="libResizeHandle"></div>
     </div>
   </div>
 
@@ -3610,10 +3644,18 @@ btnSave.addEventListener("click", async ()=>{
     });
 
 document.getElementById("btnLibrary").addEventListener("click", async ()=>{
-  libPanelWrap.style.display = (!libPanelWrap.style.display || libPanelWrap.style.display === "none") ? "flex" : "none";
-  if (libPanelWrap.style.display === "flex"){
+  const isOpening = !libPanelWrap.style.display || libPanelWrap.style.display === "none";
+
+  libPanelWrap.style.display = isOpening ? "flex" : "none";
+
+  if (isOpening) {
+    // 打开时重置为默认宽度
+    libPanelWrap.style.width = "240px";
     await refreshLibraryUI();
+    updateLibraryColumns(240); // 初始化为默认 240px 的列数
   }
+
+  updateFloatingButtons(); // 更新按钮位置
 });
 
 btnOpenArchive?.addEventListener("click", async ()=>{
@@ -3629,6 +3671,7 @@ archiveOverlay?.addEventListener("click", (e)=>{
 
     document.getElementById("btnLibClose").addEventListener("click", ()=>{
       libPanelWrap.style.display = "none";
+      updateFloatingButtons(); // 更新按钮位置
     });
 
     // 自定义滚动条
@@ -4211,6 +4254,151 @@ window.addEventListener("keydown", (e)=>{
     resizeDrawLayer();
     refreshLibraryUI().catch(console.error);
     initModel();
+
+// ======================== Library Panel Resize & Floating Buttons ========================
+
+function updateLibraryColumns(width) {
+  const libList = document.getElementById('libList');
+  if (!libList) return;
+
+  // 超过 250px 后，每 80px 增加一列
+  let columns = 3; // 默认 3 列
+  if (width > 250) {
+    columns = Math.floor(width / 80);
+  }
+
+  libList.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+}
+
+function updateFloatingButtons() {
+  const libPanelWrap = document.getElementById('libPanelWrap');
+  const btnDelete = document.getElementById('btnDeleteSelected');
+  const btnClear = document.getElementById('btnClearAll');
+  const globalGroup = document.getElementById('globalGroup');
+
+  if (!libPanelWrap || !btnDelete || !btnClear || !globalGroup) {
+    return;
+  }
+
+  const isPanelOpen = libPanelWrap.style.display === 'flex';
+
+  if (isPanelOpen) {
+    // Library Panel 打开时，按钮跟随 Panel 右侧边缘
+    const panelRect = libPanelWrap.getBoundingClientRect();
+    const targetLeft = panelRect.right + 10;
+
+    // 记录按钮原始位置（只记录一次）
+    if (!btnDelete.dataset.originalParent) {
+      const deleteRect = btnDelete.getBoundingClientRect();
+      const clearRect = btnClear.getBoundingClientRect();
+
+      btnDelete.dataset.originalTop = deleteRect.top;
+      btnClear.dataset.originalTop = clearRect.top;
+      btnDelete.dataset.originalParent = 'groupContent';
+      btnClear.dataset.originalParent = 'groupContent';
+    }
+
+    // 把按钮移到 body 下，完全脱离 groupContent
+    if (btnDelete.parentElement !== document.body) {
+      document.body.appendChild(btnDelete);
+      document.body.appendChild(btnClear);
+    }
+
+    // 设置 fixed 定位
+    btnDelete.style.position = 'fixed';
+    btnDelete.style.left = targetLeft + 'px';
+    btnDelete.style.top = btnDelete.dataset.originalTop + 'px';
+    btnDelete.style.zIndex = '1000';
+
+    btnClear.style.position = 'fixed';
+    btnClear.style.left = targetLeft + 'px';
+    btnClear.style.top = btnClear.dataset.originalTop + 'px';
+    btnClear.style.zIndex = '1000';
+
+  } else {
+    // Library Panel 关闭时，按钮回到 Global Function 内
+    const groupContent = globalGroup.querySelector('.groupContent');
+
+    if (groupContent && btnDelete.parentElement !== groupContent) {
+      groupContent.appendChild(btnDelete);
+      groupContent.appendChild(btnClear);
+    }
+
+    // 清除样式
+    btnDelete.style.position = '';
+    btnDelete.style.left = '';
+    btnDelete.style.top = '';
+    btnDelete.style.zIndex = '';
+
+    btnClear.style.position = '';
+    btnClear.style.left = '';
+    btnClear.style.top = '';
+    btnClear.style.zIndex = '';
+
+    // 清除记录
+    delete btnDelete.dataset.originalTop;
+    delete btnClear.dataset.originalTop;
+    delete btnDelete.dataset.originalParent;
+    delete btnClear.dataset.originalParent;
+  }
+}
+
+function setupLibraryResize() {
+  const handle = document.getElementById('libResizeHandle');
+  const libPanelWrap = document.getElementById('libPanelWrap');
+
+  if (!handle || !libPanelWrap) return;
+
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  handle.addEventListener('pointerdown', (e) => {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = libPanelWrap.offsetWidth;
+    handle.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  document.addEventListener('pointermove', (e) => {
+    if (!isResizing) return;
+
+    const deltaX = e.clientX - startX;
+    const newWidth = Math.max(240, Math.min(startWidth + deltaX, window.innerWidth * 0.8));
+
+    libPanelWrap.style.width = newWidth + 'px';
+    updateLibraryColumns(newWidth);
+
+    // 实时更新按钮位置 - 每次 resize 都重新计算
+    requestAnimationFrame(() => {
+      updateFloatingButtons();
+    });
+  });
+
+  document.addEventListener('pointerup', () => {
+    if (isResizing) {
+      isResizing = false;
+      updateFloatingButtons(); // 最后再更新一次确保位置准确
+    }
+  });
+
+  document.addEventListener('pointercancel', () => {
+    if (isResizing) {
+      isResizing = false;
+      updateFloatingButtons();
+    }
+  });
+}
+
+// 初始化 resize 功能
+setupLibraryResize();
+
+// 窗口 resize 时更新按钮位置
+window.addEventListener('resize', updateFloatingButtons);
+window.visualViewport?.addEventListener('resize', updateFloatingButtons);
+
 // ==============================点击sticker进入edit ======
 // ======================== Sticker 点击 → 只打开功能环 ========================
 stage.addEventListener("pointerup", (e) => {
@@ -4266,7 +4454,7 @@ function showFunctionCircle(initCx, initCy) {
     let ringCx = initCx;
     let ringCy = initCy;
     let radiusPx = 80;
-    const angleStep = (Math.PI * 2) / funcs.length;
+    let centerRotation = 0; // Track center disc rotation
 
     function closeCircle() {
         document.removeEventListener("pointermove", onDocPointerMove);
@@ -4277,25 +4465,6 @@ function showFunctionCircle(initCx, initCy) {
         funcCircleOpen = false;
     }
     container._close = closeCircle;
-
-    // pointer indicator line
-    const pointerLine = document.createElement("div");
-    pointerLine.style.position = "absolute";
-    pointerLine.style.width = "2px";
-    pointerLine.style.height = (radiusPx - 10) + "px";
-    pointerLine.style.background = "rgba(255,255,255,0.6)";
-    pointerLine.style.transformOrigin = "50% 0%";
-    pointerLine.style.pointerEvents = "none";
-    pointerLine.style.borderRadius = "1px";
-    pointerLine.style.display = "none";
-    container.appendChild(pointerLine);
-
-    function updatePointerLine(angle) {
-        pointerLine.style.left = ringCx + "px";
-        pointerLine.style.top  = ringCy + "px";
-        pointerLine.style.height = (radiusPx - 10) + "px";
-        pointerLine.style.transform = "translate(-50%, 0) rotate(" + (angle + Math.PI / 2) + "rad)";
-    }
 
     // hit area for ring drag-to-move
     const hitArea = document.createElement("div");
@@ -4323,11 +4492,15 @@ function showFunctionCircle(initCx, initCy) {
     centerImg.style.height = "50px";
     centerImg.style.pointerEvents = "auto";
     centerImg.style.touchAction = "none";
-    centerImg.style.transform = "translate(-50%, -50%)";
+    centerImg.style.transformOrigin = "center center";
     centerImg.style.left = ringCx + "px";
     centerImg.style.top  = ringCy + "px";
     centerImg.style.zIndex = "2";
     container.appendChild(centerImg);
+
+    function updateCenterRotation() {
+        centerImg.style.transform = "translate(-50%, -50%) rotate(" + centerRotation + "rad)";
+    }
 
     // function buttons
     const btnEls = [];
@@ -4363,20 +4536,51 @@ function showFunctionCircle(initCx, initCy) {
         });
     });
 
+    // arc: 135 deg spread on the left side, centered at 180 deg (pointing left)
+    const arcCenter = Math.PI;       // 180 deg = left
+    const arcSpread = (135 / 180) * Math.PI; // 135 deg total spread (67.5 deg each side)
+
+    function btnAngle(i) {
+        const t = funcs.length > 1 ? i / (funcs.length - 1) : 0.5;
+        return arcCenter - arcSpread/2 + t * arcSpread;
+    }
+
     function updateButtons() {
         funcs.forEach((func, i) => {
-            const angle = i * angleStep - Math.PI / 2;
-            btnEls[i].style.left = (ringCx + radiusPx * Math.cos(angle)) + "px";
-            btnEls[i].style.top  = (ringCy + radiusPx * Math.sin(angle)) + "px";
+            const angle = btnAngle(i);
+            const bx = ringCx + radiusPx * Math.cos(angle);
+            const by = ringCy + radiusPx * Math.sin(angle);
+            btnEls[i].style.left = bx + "px";
+            btnEls[i].style.top  = by + "px";
+            btnEls[i].style.transform = "translate(-50%, -50%)";
         });
+    }
+
+    function getSelectedFunctionByRotation() {
+        // The center disc points in the direction of centerRotation
+        // Find which button is closest to that direction
+        let bestIdx = -1;
+        let bestDist = Infinity;
+        funcs.forEach((func, i) => {
+            const ba = btnAngle(i);
+            let diff = centerRotation - ba;
+            while (diff > Math.PI) diff -= 2 * Math.PI;
+            while (diff < -Math.PI) diff += 2 * Math.PI;
+            const absDiff = Math.abs(diff);
+            if (absDiff < bestDist) {
+                bestDist = absDiff;
+                bestIdx = i;
+            }
+        });
+        return bestIdx;
     }
 
     function highlightNearest(pointerAngle) {
         let bestIdx = -1;
         let bestDist = Infinity;
         funcs.forEach((func, i) => {
-            const btnAngle = i * angleStep - Math.PI / 2;
-            let diff = pointerAngle - btnAngle;
+            const ba = btnAngle(i);
+            let diff = pointerAngle - ba;
             while (diff > Math.PI) diff -= 2 * Math.PI;
             while (diff < -Math.PI) diff += 2 * Math.PI;
             const absDiff = Math.abs(diff);
@@ -4411,16 +4615,16 @@ function showFunctionCircle(initCx, initCy) {
     let moveStartX = 0, moveStartY = 0;
     let moveBaseCx = 0, moveBaseCy = 0;
 
-    // center disc: selector dial
+    // center disc: rotate to select function
     centerImg.addEventListener("pointerdown", (e) => {
         dialDragging = true;
         hoveredIdx = -1;
         e.preventDefault();
         e.stopPropagation();
         centerImg.setPointerCapture(e.pointerId);
-        pointerLine.style.display = "block";
         const angle = Math.atan2(e.clientY - ringCy, e.clientX - ringCx);
-        updatePointerLine(angle);
+        centerRotation = angle;
+        updateCenterRotation();
         hoveredIdx = highlightNearest(angle);
     });
 
@@ -4441,7 +4645,8 @@ function showFunctionCircle(initCx, initCy) {
     function onDocPointerMove(e) {
         if (dialDragging) {
             const angle = Math.atan2(e.clientY - ringCy, e.clientX - ringCx);
-            updatePointerLine(angle);
+            centerRotation = angle;
+            updateCenterRotation();
             hoveredIdx = highlightNearest(angle);
             return;
         }
@@ -4454,14 +4659,12 @@ function showFunctionCircle(initCx, initCy) {
             centerImg.style.top  = ringCy + "px";
             updateButtons();
             updateHitArea();
-            pointerLine.style.display = "none";
         }
     }
 
     function onDocPointerUp() {
         if (dialDragging) {
             dialDragging = false;
-            pointerLine.style.display = "none";
             if (hoveredIdx >= 0) {
                 const func = funcs[hoveredIdx];
                 const cx = ringCx, cy = ringCy;
@@ -4508,6 +4711,7 @@ function showFunctionCircle(initCx, initCy) {
     // initial layout
     updateButtons();
     updateHitArea();
+    updateCenterRotation();
 
     // close on outside click
     document.addEventListener("pointerdown", onDocOutsideDown);
