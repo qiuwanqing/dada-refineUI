@@ -52,7 +52,7 @@
     }
 
     .groupFold.expanded .groupContent {
-        max-height: 420px;
+        max-height: 900px;
         opacity: 1;
         transform: translateY(0) scaleY(1);
         pointer-events: auto;
@@ -385,7 +385,7 @@
       overflow-x: hidden;
       padding:10px;
       border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.48);
+      background: rgba(255,255,255,.80);
       backdrop-filter: blur(10px);
       border-radius: 0px;
       scrollbar-width: none;
@@ -579,7 +579,7 @@
 /* Delete Selected */
 #btnDeleteSelected img {
     width: auto;
-    height: 15px;
+    height: 20px;
     margin-left: 9px;
     margin-top: 4px;
 }
@@ -587,10 +587,39 @@
 /* Clear All */
 #btnClearAll img {
     width: auto;
-    height: 15px;
+    height: 20px;
     margin-left: 9px;
     margin-top: 4px;
 }
+
+/* Done */
+#btnDoneGlobal img {
+    width: auto;
+    height: 20px;
+    margin-left: 9px;
+    margin-top: 4px;
+}
+
+/* Undo */
+#btnUndoGlobal img {
+    width: auto;
+    height: 20px;
+    margin-left: 9px;
+    margin-top: 4px;
+}
+
+/* Redo */
+#btnRedoGlobal img {
+    width: auto;
+    height: 20px;
+    margin-left: 9px;
+    margin-top: 4px;
+}
+
+#globalGroup .groupContent > #btnDeleteSelected {
+    margin-top: 370px;
+}
+
  /* ---------------- 折叠弹动 ---------------- */
    #rightColumn {
     position: absolute;
@@ -938,8 +967,17 @@
                 <button id="btnDeleteSelected" class="subBtn">
                     <img src="assets/delete.png" alt="Delete">
                 </button>
+                <button id="btnDoneGlobal" class="subBtn">
+                    <img src="assets/done.png" alt="Done">
+                </button>
                 <button id="btnClearAll" class="subBtn">
                     <img src="assets/clear.png" alt="Clear">
+                </button>
+                <button id="btnUndoGlobal" class="subBtn">
+                    <img src="assets/undo.png" alt="Undo">
+                </button>
+                <button id="btnRedoGlobal" class="subBtn">
+                    <img src="assets/reundo.png" alt="Redo">
                 </button>
 
         </div>
@@ -4273,10 +4311,13 @@ function updateLibraryColumns(width) {
 function updateFloatingButtons() {
   const libPanelWrap = document.getElementById('libPanelWrap');
   const btnDelete = document.getElementById('btnDeleteSelected');
+  const btnDone = document.getElementById('btnDoneGlobal');
   const btnClear = document.getElementById('btnClearAll');
+  const btnUndo = document.getElementById('btnUndoGlobal');
+  const btnRedo = document.getElementById('btnRedoGlobal');
   const globalGroup = document.getElementById('globalGroup');
 
-  if (!libPanelWrap || !btnDelete || !btnClear || !globalGroup) {
+  if (!libPanelWrap || !btnDelete || !btnDone || !btnClear || !btnUndo || !btnRedo || !globalGroup) {
     return;
   }
 
@@ -4290,18 +4331,31 @@ function updateFloatingButtons() {
     // 记录按钮原始位置（只记录一次）
     if (!btnDelete.dataset.originalParent) {
       const deleteRect = btnDelete.getBoundingClientRect();
+      const doneRect = btnDone.getBoundingClientRect();
       const clearRect = btnClear.getBoundingClientRect();
+      const undoRect = btnUndo.getBoundingClientRect();
+      const redoRect = btnRedo.getBoundingClientRect();
 
       btnDelete.dataset.originalTop = deleteRect.top;
+      btnDone.dataset.originalTop = doneRect.top;
       btnClear.dataset.originalTop = clearRect.top;
+      btnUndo.dataset.originalTop = undoRect.top;
+      btnRedo.dataset.originalTop = redoRect.top;
+
       btnDelete.dataset.originalParent = 'groupContent';
+      btnDone.dataset.originalParent = 'groupContent';
       btnClear.dataset.originalParent = 'groupContent';
+      btnUndo.dataset.originalParent = 'groupContent';
+      btnRedo.dataset.originalParent = 'groupContent';
     }
 
     // 把按钮移到 body 下，完全脱离 groupContent
     if (btnDelete.parentElement !== document.body) {
       document.body.appendChild(btnDelete);
+      document.body.appendChild(btnDone);
       document.body.appendChild(btnClear);
+      document.body.appendChild(btnUndo);
+      document.body.appendChild(btnRedo);
     }
 
     // 设置 fixed 定位
@@ -4310,10 +4364,25 @@ function updateFloatingButtons() {
     btnDelete.style.top = btnDelete.dataset.originalTop + 'px';
     btnDelete.style.zIndex = '1000';
 
+    btnDone.style.position = 'fixed';
+    btnDone.style.left = targetLeft + 'px';
+    btnDone.style.top = btnDone.dataset.originalTop + 'px';
+    btnDone.style.zIndex = '1000';
+
     btnClear.style.position = 'fixed';
     btnClear.style.left = targetLeft + 'px';
     btnClear.style.top = btnClear.dataset.originalTop + 'px';
     btnClear.style.zIndex = '1000';
+
+    btnUndo.style.position = 'fixed';
+    btnUndo.style.left = targetLeft + 'px';
+    btnUndo.style.top = btnUndo.dataset.originalTop + 'px';
+    btnUndo.style.zIndex = '1000';
+
+    btnRedo.style.position = 'fixed';
+    btnRedo.style.left = targetLeft + 'px';
+    btnRedo.style.top = btnRedo.dataset.originalTop + 'px';
+    btnRedo.style.zIndex = '1000';
 
   } else {
     // Library Panel 关闭时，按钮回到 Global Function 内
@@ -4321,7 +4390,10 @@ function updateFloatingButtons() {
 
     if (groupContent && btnDelete.parentElement !== groupContent) {
       groupContent.appendChild(btnDelete);
+      groupContent.appendChild(btnDone);
       groupContent.appendChild(btnClear);
+      groupContent.appendChild(btnUndo);
+      groupContent.appendChild(btnRedo);
     }
 
     // 清除样式
@@ -4330,16 +4402,38 @@ function updateFloatingButtons() {
     btnDelete.style.top = '';
     btnDelete.style.zIndex = '';
 
+    btnDone.style.position = '';
+    btnDone.style.left = '';
+    btnDone.style.top = '';
+    btnDone.style.zIndex = '';
+
     btnClear.style.position = '';
     btnClear.style.left = '';
     btnClear.style.top = '';
     btnClear.style.zIndex = '';
 
+    btnUndo.style.position = '';
+    btnUndo.style.left = '';
+    btnUndo.style.top = '';
+    btnUndo.style.zIndex = '';
+
+    btnRedo.style.position = '';
+    btnRedo.style.left = '';
+    btnRedo.style.top = '';
+    btnRedo.style.zIndex = '';
+
     // 清除记录
     delete btnDelete.dataset.originalTop;
+    delete btnDone.dataset.originalTop;
     delete btnClear.dataset.originalTop;
+    delete btnUndo.dataset.originalTop;
+    delete btnRedo.dataset.originalTop;
+
     delete btnDelete.dataset.originalParent;
+    delete btnDone.dataset.originalParent;
     delete btnClear.dataset.originalParent;
+    delete btnUndo.dataset.originalParent;
+    delete btnRedo.dataset.originalParent;
   }
 }
 
