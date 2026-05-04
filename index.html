@@ -4695,7 +4695,7 @@ let lastStickerTap = { el: null, time: 0 };
 const STICKER_DOUBLE_TAP_MS = 420;
 const STICKER_TAP_MOVE_THRESHOLD = 8;
 
-function openStickerFunctionCircle(sticker) {
+function openStickerFunctionCircle(sticker, tapX, tapY) {
     editbar.style.display = "none";
 
     const _oldCircle = document.getElementById("funcCircleContainer");
@@ -4708,9 +4708,11 @@ function openStickerFunctionCircle(sticker) {
     });
     sticker.classList.add("selected");
 
-    const _rect = sticker.getBoundingClientRect();
-    const _cx = _rect.left + _rect.width / 2;
-    const _cy = _rect.top + _rect.height / 2;
+    const pad = 88;
+    const targetX = (typeof tapX === "number") ? tapX : window.innerWidth / 2;
+    const targetY = (typeof tapY === "number") ? tapY : window.innerHeight / 2;
+    const _cx = clamp(targetX, pad, window.innerWidth - pad);
+    const _cy = clamp(targetY, pad, window.innerHeight - pad);
     showFunctionCircle(_cx, _cy);
 }
 
@@ -4758,7 +4760,7 @@ stage.addEventListener("pointerup", (e) => {
     e.stopPropagation();
     e.stopImmediatePropagation();
     lastStickerTap = { el: null, time: 0 };
-    openStickerFunctionCircle(candidate.el);
+    openStickerFunctionCircle(candidate.el, e.clientX, e.clientY);
 }, true);
 
 // ======================== 功能环函数 ========================
