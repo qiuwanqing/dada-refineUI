@@ -451,6 +451,17 @@
       background: rgba(91, 183, 255, 0.7);
     }
 
+    @media (pointer: coarse) and (min-width: 700px) and (max-width: 1200px) {
+      #libPanelWrap{
+        top: 170px;
+        width: 320px;
+        max-height: 82vh;
+      }
+      #libPanel{
+        max-height: 82vh;
+      }
+    }
+
     /* Floating buttons - 覆盖 groupContent 和 disabled 的限制 */
     .floating-button {
       opacity: 1 !important;
@@ -3692,10 +3703,11 @@ document.getElementById("btnLibrary").addEventListener("click", async ()=>{
   libPanelWrap.style.display = isOpening ? "flex" : "none";
 
   if (isOpening) {
-    // 打开时重置为默认宽度
-    libPanelWrap.style.width = "240px";
+    // 打开时重置为当前视口 CSS 默认宽度
+    libPanelWrap.style.width = "";
+    const defaultWidth = Math.round(libPanelWrap.getBoundingClientRect().width || 240);
     await refreshLibraryUI();
-    updateLibraryColumns(240); // 初始化为默认 240px 的列数
+    updateLibraryColumns(defaultWidth);
   }
 
   updateFloatingButtons(); // 更新按钮位置
