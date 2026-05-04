@@ -649,8 +649,14 @@
     margin-top: 4px;
 }
 
-#globalGroup .groupContent > #btnDeleteSelected {
-    margin-top: 430px;
+#globalActionButtons {
+    position: absolute;
+    left: 20px;
+    top: 500px;
+    z-index: 51;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
  /* ---------------- 折叠弹动 ---------------- */
@@ -997,23 +1003,24 @@
                 <img src="assets/library.png" alt="Library">
                 </button>
 
-                <button id="btnDeleteSelected" class="subBtn">
-                    <img src="assets/delete.png" alt="Delete">
-                </button>
-                <button id="btnDoneGlobal" class="subBtn">
-                    <img src="assets/done.png" alt="Done">
-                </button>
-                <button id="btnClearAll" class="subBtn">
-                    <img src="assets/clear.png" alt="Clear">
-                </button>
-                <button id="btnUndoGlobal" class="subBtn">
-                    <img src="assets/undo.png" alt="Undo">
-                </button>
-                <button id="btnRedoGlobal" class="subBtn">
-                    <img src="assets/reundo.png" alt="Redo">
-                </button>
-
         </div>
+    </div>
+    <div id="globalActionButtons">
+        <button id="btnDeleteSelected" class="subBtn">
+            <img src="assets/delete.png" alt="Delete">
+        </button>
+        <button id="btnDoneGlobal" class="subBtn">
+            <img src="assets/done.png" alt="Done">
+        </button>
+        <button id="btnClearAll" class="subBtn">
+            <img src="assets/clear.png" alt="Clear">
+        </button>
+        <button id="btnUndoGlobal" class="subBtn">
+            <img src="assets/undo.png" alt="Undo">
+        </button>
+        <button id="btnRedoGlobal" class="subBtn">
+            <img src="assets/reundo.png" alt="Redo">
+        </button>
     </div>
 <div id="rightColumn">
 <!-- ================= Capture Functions ================= -->
@@ -4462,8 +4469,9 @@ function updateFloatingButtons() {
   const btnUndo = document.getElementById('btnUndoGlobal');
   const btnRedo = document.getElementById('btnRedoGlobal');
   const globalGroup = document.getElementById('globalGroup');
+  const globalActionButtons = document.getElementById('globalActionButtons');
 
-  if (!libPanelWrap || !btnDelete || !btnDone || !btnClear || !btnUndo || !btnRedo || !globalGroup) {
+  if (!libPanelWrap || !btnDelete || !btnDone || !btnClear || !btnUndo || !btnRedo || !globalGroup || !globalActionButtons) {
     return;
   }
 
@@ -4488,11 +4496,11 @@ function updateFloatingButtons() {
       btnUndo.dataset.originalTop = undoRect.top;
       btnRedo.dataset.originalTop = redoRect.top;
 
-      btnDelete.dataset.originalParent = 'groupContent';
-      btnDone.dataset.originalParent = 'groupContent';
-      btnClear.dataset.originalParent = 'groupContent';
-      btnUndo.dataset.originalParent = 'groupContent';
-      btnRedo.dataset.originalParent = 'groupContent';
+      btnDelete.dataset.originalParent = 'globalActionButtons';
+      btnDone.dataset.originalParent = 'globalActionButtons';
+      btnClear.dataset.originalParent = 'globalActionButtons';
+      btnUndo.dataset.originalParent = 'globalActionButtons';
+      btnRedo.dataset.originalParent = 'globalActionButtons';
     }
 
     // 把按钮移到 body 下，完全脱离 groupContent
@@ -4531,15 +4539,13 @@ function updateFloatingButtons() {
     btnRedo.style.zIndex = '1000';
 
   } else {
-    // Library Panel 关闭时，按钮回到 Global Function 内
-    const groupContent = globalGroup.querySelector('.groupContent');
-
-    if (groupContent && btnDelete.parentElement !== groupContent) {
-      groupContent.appendChild(btnDelete);
-      groupContent.appendChild(btnDone);
-      groupContent.appendChild(btnClear);
-      groupContent.appendChild(btnUndo);
-      groupContent.appendChild(btnRedo);
+    // Library Panel 关闭时，按钮回到外层操作按钮容器
+    if (btnDelete.parentElement !== globalActionButtons) {
+      globalActionButtons.appendChild(btnDelete);
+      globalActionButtons.appendChild(btnDone);
+      globalActionButtons.appendChild(btnClear);
+      globalActionButtons.appendChild(btnUndo);
+      globalActionButtons.appendChild(btnRedo);
     }
 
     // 清除样式
