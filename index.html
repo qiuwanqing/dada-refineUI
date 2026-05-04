@@ -652,7 +652,7 @@
 #globalActionButtons {
     position: absolute;
     left: 20px;
-    top: 500px;
+    top: 570px;
     z-index: 51;
     display: flex;
     flex-direction: column;
@@ -4480,7 +4480,7 @@ function updateFloatingButtons() {
   if (isPanelOpen) {
     // Library Panel 打开时，按钮跟随 Panel 右侧边缘
     const panelRect = libPanelWrap.getBoundingClientRect();
-    const targetLeft = panelRect.right + 10;
+    const targetLeft = panelRect.right + 3;
 
     // 记录按钮原始位置（只记录一次）
     if (!btnDelete.dataset.originalParent) {
