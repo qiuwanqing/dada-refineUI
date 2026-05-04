@@ -4673,6 +4673,7 @@ window.visualViewport?.addEventListener('resize', updateFloatingButtons);
 let lastPageTouchEndAt = 0;
 document.addEventListener("touchend", (e)=>{
   if (e.target.closest("input, textarea")) return;
+  if (e.target.closest(".sticker, #funcCircleContainer")) return;
 
   const now = Date.now();
   if (now - lastPageTouchEndAt < 420){
@@ -4683,6 +4684,7 @@ document.addEventListener("touchend", (e)=>{
 
 document.addEventListener("dblclick", (e)=>{
   if (e.target.closest("input, textarea")) return;
+  if (e.target.closest(".sticker, #funcCircleContainer")) return;
   e.preventDefault();
 }, { passive:false });
 
