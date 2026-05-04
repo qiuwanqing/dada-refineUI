@@ -4670,6 +4670,22 @@ window.visualViewport?.addEventListener('resize', updateFloatingButtons);
   }, { passive:false });
 });
 
+let lastPageTouchEndAt = 0;
+document.addEventListener("touchend", (e)=>{
+  if (e.target.closest("input, textarea")) return;
+
+  const now = Date.now();
+  if (now - lastPageTouchEndAt < 420){
+    e.preventDefault();
+  }
+  lastPageTouchEndAt = now;
+}, { passive:false });
+
+document.addEventListener("dblclick", (e)=>{
+  if (e.target.closest("input, textarea")) return;
+  e.preventDefault();
+}, { passive:false });
+
 // ==============================双击 sticker 进入 edit ======
 // 单击仍然只负责选中/拖动；同一个 sticker 快速点两次才打开功能环。
 let stickerTapCandidate = null;
