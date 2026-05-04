@@ -1480,6 +1480,7 @@ blurBtn.addEventListener("click", () => {
 
     let editMode = "stretch";
     let paintUndoStack = [];
+    let paintRedoStack = [];
 
     let InteractiveSegmenter = null;
     let FilesetResolver = null;
@@ -2057,14 +2058,19 @@ async function initModel(){
       selected = null;
       editbar.style.display = "none";
       paintUndoStack = [];
+      paintRedoStack = [];
       setActionEnabled(false);
     }
 
     function selectSticker(st){
-      if (selected && selected !== st) selected.el.classList.remove("selected");
+      const changed = selected !== st;
+      if (selected && changed) selected.el.classList.remove("selected");
       selected = st;
       st.el.classList.add("selected");
-      paintUndoStack = [];
+      if (changed){
+        paintUndoStack = [];
+        paintRedoStack = [];
+      }
       setActionEnabled(true);
       showHint("selected", 1200);
     }
@@ -2261,6 +2267,7 @@ async function initModel(){
       let startX=0, startY=0;
       let baseLeft=0, baseTop=0;
       let moved = false;
+      let moveUndoCaptured = false;
       const DRAG_THRESHOLD = 6;
       let lastLocal = null;
 
@@ -2274,6 +2281,7 @@ async function initModel(){
 
         isDown = true;
         moved = false;
+        moveUndoCaptured = false;
 
         startX = e.clientX;
         startY = e.clientY;
@@ -2288,11 +2296,7 @@ async function initModel(){
 
         if (editbar.style.display === "flex" || brushPanel.style.display === "flex") {
           lastLocal = getLocalPointOnCanvas(el, e.clientX, e.clientY);
-
-          const ctx = el.getContext("2d");
-          const snap = ctx.getImageData(0,0, el.width, el.height);
-          paintUndoStack.push(snap);
-          if (paintUndoStack.length > 14) paintUndoStack.shift();
+          pushUndoForSelected();
         } else {
           lastLocal = null;
         }
@@ -2310,6 +2314,10 @@ async function initModel(){
         if (editbar.style.display !== "flex" && !funcCircleOpen && brushPanel.style.display !== "flex") {
           if (dist > DRAG_THRESHOLD) moved = true;
           if (!moved) return;
+          if (!moveUndoCaptured) {
+            pushUndoForSelected();
+            moveUndoCaptured = true;
+          }
 
           st.x = baseLeft + dx;
           st.y = baseTop  + dy;
@@ -2502,14 +2510,91 @@ if (editMode === "mblur"){
   }
 
 
+    function captureStickerState(st){
+      if (!st?.el) return null;
+      const ctx = st.el.getContext("2d");
+      let imageData = null;
+      try{
+        imageData = ctx.getImageData(0,0, st.el.width, st.el.height);
+      }catch{}
+      return {
+        imageData,
+        canvasW: st.el.width,
+        canvasH: st.el.height,
+        x: st.x,
+        y: st.y,
+        w: st.w,
+        h: st.h,
+        scale: st.scale,
+        rot: st.rot,
+        blurPx: st.blurPx || 0,
+        sideOn: !!st.sideOn
+      };
+    }
+
+    function restoreStickerState(st, snap){
+      if (!st?.el || !snap) return false;
+
+      st.x = snap.x;
+      st.y = snap.y;
+      st.w = snap.w;
+      st.h = snap.h;
+      st.scale = snap.scale;
+      st.rot = snap.rot;
+      st.blurPx = snap.blurPx || 0;
+      st.sideOn = !!snap.sideOn;
+
+      st.el.style.left = st.x + "px";
+      st.el.style.top = st.y + "px";
+      st.el.style.width = st.w + "px";
+      st.el.style.height = st.h + "px";
+
+      if (snap.canvasW && snap.canvasH && (st.el.width !== snap.canvasW || st.el.height !== snap.canvasH)){
+        st.el.width = snap.canvasW;
+        st.el.height = snap.canvasH;
+      }
+
+      if (snap.imageData){
+        st.el.getContext("2d").putImageData(snap.imageData, 0, 0);
+      }
+
+      applyTransform(st);
+      applyStickerCssFilter(st);
+      st.el.classList.add("selected");
+      return true;
+    }
+
     function pushUndoForSelected(){
-  if (!selected) return false;
-  const ctx = selected.el.getContext("2d");
-  const snap = ctx.getImageData(0,0, selected.el.width, selected.el.height);
-  paintUndoStack.push(snap);
-  if (paintUndoStack.length > 14) paintUndoStack.shift();
-  return true;
-}
+      if (!selected) return false;
+      const snap = captureStickerState(selected);
+      if (!snap) return false;
+      paintUndoStack.push(snap);
+      paintRedoStack = [];
+      if (paintUndoStack.length > 24) paintUndoStack.shift();
+      return true;
+    }
+
+    function undoSelectedSticker(){
+      if (!selected || paintUndoStack.length === 0) return false;
+      const current = captureStickerState(selected);
+      const prev = paintUndoStack.pop();
+      if (current) paintRedoStack.push(current);
+      if (paintRedoStack.length > 24) paintRedoStack.shift();
+      restoreStickerState(selected, prev);
+      showHint("undo", 650);
+      return true;
+    }
+
+    function redoSelectedSticker(){
+      if (!selected || paintRedoStack.length === 0) return false;
+      const current = captureStickerState(selected);
+      const next = paintRedoStack.pop();
+      if (current) paintUndoStack.push(current);
+      if (paintUndoStack.length > 24) paintUndoStack.shift();
+      restoreStickerState(selected, next);
+      showHint("redo", 650);
+      return true;
+    }
 
 // 快速模糊：用 ctx.filter（性能好，iOS 也支持）
 function applyGaussianBlur(px){
@@ -2825,7 +2910,6 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
 
       if (editbar.style.display === "flex") {
         editbar.style.display = "none";
-        paintUndoStack = [];
         showHint("exit Edit", 800);
         return;
       }
@@ -3608,6 +3692,7 @@ btnSave.addEventListener("click", async ()=>{
 
     document.getElementById("btnFxBlur").addEventListener("click", ()=>{
     if (!selected) return;
+    if (!pushUndoForSelected()) return;
 
     // 用 radius 滑块控制 CSS blur（iOS 稳定）
     const px = Math.round(parseInt(radiusEl.value, 10) / 12); // 稍微更明显
@@ -3663,11 +3748,15 @@ btnSave.addEventListener("click", async ()=>{
     });
 
     document.getElementById("btnUndoPaint").addEventListener("click", ()=>{
-      if (!selected || paintUndoStack.length === 0) return;
-      const prev = paintUndoStack.pop();
-      const ctx = selected.el.getContext("2d");
-      ctx.putImageData(prev, 0, 0);
-      showHint("undo", 650);
+      undoSelectedSticker();
+    });
+
+    document.getElementById("btnUndoGlobal")?.addEventListener("click", ()=>{
+      undoSelectedSticker();
+    });
+
+    document.getElementById("btnRedoGlobal")?.addEventListener("click", ()=>{
+      redoSelectedSticker();
     });
 
     document.getElementById("btnSideCancel").addEventListener("click", ()=>{
@@ -3685,14 +3774,12 @@ btnSave.addEventListener("click", async ()=>{
 
     document.getElementById("btnDone").addEventListener("click", ()=>{
       editbar.style.display = "none";
-      paintUndoStack = [];
       showHint("exit Edit", 800);
     });
 
     document.getElementById("btnBrushDone").addEventListener("click", ()=>{
       brushPanel.style.display = "none";
       editMode = "stretch";
-      paintUndoStack = [];
       showHint("done", 800);
     });
 
