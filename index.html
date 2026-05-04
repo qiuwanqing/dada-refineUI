@@ -2216,13 +2216,17 @@ async function initModel(){
     }
 
     function alphaHitTest(canvasEl, clientX, clientY){
-      const r = canvasEl.getBoundingClientRect();
-      const d = canvasEl.width / r.width;
-      const px = (clientX - r.left) * d;
-      const py = (clientY - r.top) * d;
-      if (px < 0 || py < 0 || px >= canvasEl.width || py >= canvasEl.height) return false;
-      const a = canvasEl.getContext("2d").getImageData(px|0, py|0, 1, 1).data[3];
-      return a !== 0;
+      try{
+        const r = canvasEl.getBoundingClientRect();
+        const d = canvasEl.width / r.width;
+        const px = (clientX - r.left) * d;
+        const py = (clientY - r.top) * d;
+        if (px < 0 || py < 0 || px >= canvasEl.width || py >= canvasEl.height) return false;
+        const a = canvasEl.getContext("2d").getImageData(px|0, py|0, 1, 1).data[3];
+        return a !== 0;
+      }catch{
+        return true;
+      }
     }
 
     function getLocalPointOnCanvas(canvasEl, clientX, clientY){
@@ -3443,6 +3447,7 @@ async function renderArchiveGrid(){
 
     async function addStickerFromDataURL(dataURL, w, h){
       const img = new Image();
+      if (!String(dataURL).startsWith("data:")) img.crossOrigin = "anonymous";
       img.src = dataURL;
       await img.decode().catch(()=>{});
 
@@ -4493,16 +4498,14 @@ setupLibraryResize();
 window.addEventListener('resize', updateFloatingButtons);
 window.visualViewport?.addEventListener('resize', updateFloatingButtons);
 
-// ==============================点击sticker进入edit ======
-// ======================== Sticker 点击 → 只打开功能环 ========================
-stage.addEventListener("pointerup", (e) => {
-    const sticker = e.target.closest(".sticker");
-    if (!sticker) return;
+// ==============================双击 sticker 进入 edit ======
+// 单击仍然只负责选中/拖动；同一个 sticker 快速点两次才打开功能环。
+let stickerTapCandidate = null;
+let lastStickerTap = { el: null, time: 0 };
+const STICKER_DOUBLE_TAP_MS = 420;
+const STICKER_TAP_MOVE_THRESHOLD = 8;
 
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-
+function openStickerFunctionCircle(sticker) {
     editbar.style.display = "none";
 
     const _oldCircle = document.getElementById("funcCircleContainer");
@@ -4519,6 +4522,46 @@ stage.addEventListener("pointerup", (e) => {
     const _cx = _rect.left + _rect.width / 2;
     const _cy = _rect.top + _rect.height / 2;
     showFunctionCircle(_cx, _cy);
+}
+
+stage.addEventListener("pointerdown", (e) => {
+    const sticker = e.target.closest(".sticker");
+    if (!sticker || !alphaHitTest(sticker, e.clientX, e.clientY)) {
+        stickerTapCandidate = null;
+        return;
+    }
+
+    stickerTapCandidate = {
+        el: sticker,
+        pointerId: e.pointerId,
+        x: e.clientX,
+        y: e.clientY
+    };
+}, true);
+
+stage.addEventListener("pointerup", (e) => {
+    const candidate = stickerTapCandidate;
+    stickerTapCandidate = null;
+
+    if (!candidate || candidate.pointerId !== e.pointerId) return;
+    if (candidate.el !== e.target.closest(".sticker")) return;
+
+    const moved = Math.hypot(e.clientX - candidate.x, e.clientY - candidate.y);
+    if (moved > STICKER_TAP_MOVE_THRESHOLD) return;
+
+    const now = performance.now();
+    const isDoubleTap =
+        lastStickerTap.el === candidate.el &&
+        now - lastStickerTap.time <= STICKER_DOUBLE_TAP_MS;
+
+    lastStickerTap = { el: candidate.el, time: now };
+    if (!isDoubleTap) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    lastStickerTap = { el: null, time: 0 };
+    openStickerFunctionCircle(candidate.el);
 }, true);
 
 // ======================== 功能环函数 ========================
