@@ -71,6 +71,36 @@
         pointer-events: auto;
     }
 
+    .groupFold > .foldBtn img {
+        transform-origin: center center;
+        will-change: transform, filter;
+    }
+
+    .groupFold > .foldBtn:active img {
+        transform: scale(0.98);
+        filter: brightness(1.12);
+    }
+
+    .groupFold > .foldBtn.foldPulse img {
+        animation: foldIconPop 220ms ease-out;
+    }
+
+    @keyframes foldIconPop {
+        0%   { transform: scale(1); filter: brightness(1); }
+        45%  { transform: scale(1.05); filter: brightness(1.16); }
+        100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    .subBtn.subPulse img {
+        animation: subIconPop 180ms ease-out;
+    }
+
+    @keyframes subIconPop {
+        0%   { transform: scale(1); filter: brightness(1); }
+        45%  { transform: scale(1.04); filter: brightness(1.14); }
+        100% { transform: scale(1); filter: brightness(1); }
+    }
+
     .groupContent .subBtn img {
         opacity: 0;
         transform: translateY(-34px);
@@ -517,6 +547,7 @@
     }
     .thumb{
       width:100%;
+      box-sizing: border-box;
       border-radius:0px;
       border:1px dashed rgb(0, 0, 0);
       margin-bottom:4px;
@@ -524,9 +555,24 @@
       cursor:pointer;
       background:rgba(255,255,255,0);
     }
-    .lib-selected .thumb{
-      border:2px solid #ff4444;
-      opacity:0.7;
+    .libItem{
+      padding:3px;
+      margin-bottom:10px;
+      border:1px solid transparent;
+      border-radius:0px;
+      cursor:pointer;
+      transition:
+        background 120ms ease,
+        border-color 120ms ease,
+        box-shadow 120ms ease;
+    }
+    .libItem.lib-selected{
+      background: rgba(120,120,120,0);
+      border-color: rgba(80,80,80,0.55);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0);
+    }
+    .libItem.lib-selected .thumb{
+      border-color: rgba(0,0,0,0.55);
     }
     .row{ display:flex; gap:8px; margin-bottom:8px; }
     .row button{
@@ -1148,7 +1194,7 @@
     </div>
     
     <!-- 加载状态 -->
-    <div id="loader">加载模型中…<br/>（加载完后点 Start Camera）</div>
+    <div id="loader">Loading model…<br/>（after loading, click Start Camera）</div>
     <!-- 提示信息 -->
     <div id="hint"></div>
    
@@ -1199,7 +1245,6 @@
           <button id="btnLibClear">Clear</button>
           <button id="btnLibDelete">Delete</button>
         </div>
-        <h3>LIBRARY</h3>
         <div id="libList" class="small"></div>
       </div>
       <div id="libScrollbar">
@@ -1376,9 +1421,25 @@
     document.querySelectorAll(".groupFold > .foldBtn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
             const group = btn.parentElement;
+            btn.classList.remove("foldPulse");
+            void btn.offsetWidth;
+            btn.classList.add("foldPulse");
+            clearTimeout(btn._foldPulseTimer);
+            btn._foldPulseTimer = setTimeout(()=>btn.classList.remove("foldPulse"), 280);
             group.classList.toggle("expanded"); // 切换展开状态
         });
     });
+
+    document.addEventListener("click", (e)=>{
+        const btn = e.target.closest(".subBtn");
+        if (!btn) return;
+
+        btn.classList.remove("subPulse");
+        void btn.offsetWidth;
+        btn.classList.add("subPulse");
+        clearTimeout(btn._subPulseTimer);
+        btn._subPulseTimer = setTimeout(()=>btn.classList.remove("subPulse"), 200);
+    }, true);
     
     // ===== distort=====
 const btnFxDistort = document.getElementById("btnFxDistort");
@@ -1589,6 +1650,7 @@ blurBtn.addEventListener("click", () => {
     };
 
     const LIB_KEY = "capture_library_v2";
+    const LIB_HIDDEN_KEY = "capture_library_hidden_v1";
 
     const DEVICE_KEY = "capture_device_id_v1";
 
@@ -1621,7 +1683,7 @@ async function loadLibrary(){
 
   if (error){
     console.error("loadLibrary error:", error);
-    showHint("加载云端 library 失败", 1200);
+    showHint("Failed to load cloud library", 1200);
     return [];
   }
 
@@ -1646,6 +1708,27 @@ async function loadLibrary(){
 
 function saveLibrary(items){
   // 云端版不再使用 localStorage 保存主 library
+}
+
+function getLibraryItemKey(it){
+  return String(it?.id || it?.path || it?.image_url || "");
+}
+
+function getHiddenLibraryKeys(){
+  try{
+    return new Set(JSON.parse(localStorage.getItem(LIB_HIDDEN_KEY) || "[]"));
+  }catch{
+    return new Set();
+  }
+}
+
+function saveHiddenLibraryKeys(keys){
+  localStorage.setItem(LIB_HIDDEN_KEY, JSON.stringify([...keys].filter(Boolean)));
+}
+
+function visibleLibraryItems(items){
+  const hidden = getHiddenLibraryKeys();
+  return items.filter(it => !hidden.has(getLibraryItemKey(it)));
 }
 
 async function uploadStickerToSupabase(st, geo = null){
@@ -1935,11 +2018,11 @@ function assignDocksForField(){
 
     async function startCamera(){
       if (!navigator.mediaDevices?.getUserMedia) {
-        alert("当前环境不支持摄像头。");
+        alert("Current environment does not support camera");
         return;
       }
       if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
-        showHint("iOS 相机需要 HTTPS", 1400);
+        showHint("iOS camera requires HTTPS", 1400);
       }
 
       if (stream) stream.getTracks().forEach(t => t.stop());
@@ -1964,26 +2047,26 @@ function assignDocksForField(){
         loader.style.display = "none";
         resizeDrawLayer();
 
-        showHint("MP：点画面=抠图；贴纸：点=选中，拖=移动；双指=旋转缩放", 1800);
+        showHint("MP: tap screen = segmentation; sticker: tap = select, drag = move; two fingers = rotate/scale", 1800);
       } catch(e){
         console.error(e);
-        alert("无法打开相机：请检查权限；iOS 通常需要 https。");
+        alert("Cannot open camera: check permissions; iOS usually requires HTTPS");
       }
     }
 
 async function initModel(){
   try{
-    loader.innerText = "准备加载 MediaPipe…";
+    loader.innerText = "Preparing to load MediaPipe…";
 
     const mod = await import("./vendor/vision_bundle.mjs");
     InteractiveSegmenter = mod.InteractiveSegmenter;
     FilesetResolver = mod.FilesetResolver;
 
-    loader.innerText = "初始化 Vision…";
+    loader.innerText = "Initializing Vision…";
 
     const vision = await FilesetResolver.forVisionTasks("./vendor/");
 
-    loader.innerText = "加载模型…";
+    loader.innerText = "Loading model…";
 
     interactiveSegmenter =
       await InteractiveSegmenter.createFromOptions(vision,{
@@ -1995,11 +2078,11 @@ async function initModel(){
         outputConfidenceMasks:false
       });
 
-    loader.innerText = "模型就绪（点 Start Camera）";
+    loader.innerText = "Model ready (click Start Camera)";
 
   }catch(err){
     console.error(err);
-    loader.innerText = "模型加载失败";
+    loader.innerText = "Failed to load model";
   }
 }
 
@@ -2037,11 +2120,11 @@ async function initModel(){
       btnModeGrid?.classList.toggle("active", m==="grid");
       btnModeMagnet?.classList.toggle("active", m==="magnet");
 
-      if (m === "mp") showHint("MP：点一下物体自动抠图", 900);
-      if (m === "rect") showHint("RECT：按住拖拽画框，松手截取", 900);
-      if (m === "draw") showHint("DRAW：按住手写路径，松手截取", 900);
-      if (m === "grid") showHint("GRID：拖拽画大框 → 设行列 → done 切成碎片", 1200);
-      if (m === "magnet") showHint("MAGNET：手绘 LOOP/PATH；LOOP 可 IN/OUT；松手后场会保留", 1300);
+      if (m === "mp") showHint("MP: tap object to segment", 900);
+      if (m === "rect") showHint("RECT: hold and drag to draw box, release to capture", 900);
+      if (m === "draw") showHint("DRAW: hold and draw path, release to capture", 900);
+      if (m === "grid") showHint("GRID: drag to draw large box → set rows/columns → done to cut into pieces", 1200);
+      if (m === "magnet") showHint("MAGNET: draw LOOP/PATH; LOOP can be IN/OUT; release to keep field", 1300);
     }
     btnModeMP.onclick = () => setCaptureMode("mp");
     btnModeRect.onclick = () => setCaptureMode("rect");
@@ -2961,7 +3044,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
         e.target.closest("#libPanelWrap")
       ) return;
 
-      if (!video.srcObject) { showHint("先点 Start Camera", 900); return; }
+      if (!video.srcObject) { showHint("Click Start Camera first", 900); return; }
 
       if (e.target.closest(".sticker")) return;
 
@@ -3138,7 +3221,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
       console.log("GRID branch fired. display =", getComputedStyle(gridbar).display);
 
 
-      showHint("设置行列后点 done", 900);
+      showHint("Click done after setting rows/columns", 900);
       // GRID 这里先不 hideROI，让你看到外框
     } else if (captureMode === "rect"){
       await createStickerFromROI(roi, null);
@@ -3190,12 +3273,12 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
         ctx.clip();
 
         const frameCanvas = getVideoFrameCanvas();
-        if (!frameCanvas){ showHint("视频未就绪", 900); return; }
+        if (!frameCanvas){ showHint("Video not ready", 900); return; }
         ctx.drawImage(frameCanvas, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, rect.w, rect.h);
         ctx.restore();
       } else {
         const frameCanvas = getVideoFrameCanvas();
-        if (!frameCanvas){ showHint("视频未就绪", 900); return; }
+        if (!frameCanvas){ showHint("Video not ready", 900); return; }
         ctx.drawImage(frameCanvas, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, src.width, src.height);
       }
 
@@ -3210,7 +3293,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
   // 用视频真实像素裁切（最稳）
   const frameCanvas = getVideoFrameCanvas();
   if (!frameCanvas){
-    showHint("视频未就绪", 900);
+    showHint("Video not ready", 900);
     return;
   }
 
@@ -3296,7 +3379,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
   }
 
   gridGroups.push(group);
-  showHint(`GRID done (${rows}×${cols})，摇一摇洗牌`, 1400);
+  showHint(`GRID done (${rows}×${cols})，shake to shuffle`, 1400);
 }
 
 
@@ -3305,7 +3388,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
     // =========================
     async function handleMediaPipeTap(e){
     e.preventDefault?.();
-    if (!interactiveSegmenter) { showHint("模型未就绪", 800); return; }
+    if (!interactiveSegmenter) { showHint("Model not ready", 800); return; }
     if (isProcessing) return;
 
     const vRect = video.getBoundingClientRect();
@@ -3328,7 +3411,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
     const result = await new Promise(resolve => {
     const frameCanvas = getVideoFrameCanvas();
     if (!frameCanvas){
-    showHint("视频未就绪（等相机画面出现再点）", 900);
+    showHint("Video not ready (wait for camera feed)", 900);
     isProcessing = false;
     return;
     }
@@ -3342,7 +3425,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
     });
 
     if (!result?.categoryMask){
-      showHint("没有得到 mask（换个点试试）", 900);
+      showHint("No mask obtained (try another point)", 900);
       isProcessing = false;
       return;
     }
@@ -3396,7 +3479,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
     // trim 到非透明边界，得到“物体本体”canvas
     const trimmed = trimCanvas(fullCanvas);
     if (!trimmed){
-      showHint("抠图为空", 900);
+      showHint("Segmented image is empty", 900);
       isProcessing = false;
       return;
     }
@@ -3443,7 +3526,7 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
 
   } catch(err){
     console.error(err);
-    showHint("分割出错（可能网络/模型/权限）", 1200);
+    showHint("Error occurred while segmenting (network/model/permission issues)", 1200);
   }
   isProcessing = false;
 }
@@ -3487,7 +3570,9 @@ function applySideExtrude(thickness=18, dx=1, dy=1, darken=0.35, isPreview=false
     }
     
 async function refreshLibraryUI(){
-  const items = await loadLibrary();
+  const allItems = await loadLibrary();
+  const hiddenKeys = getHiddenLibraryKeys();
+  const items = libAdminDeleteMode ? allItems : visibleLibraryItems(allItems);
   libList.innerHTML = "";
 
   if (!items.length){
@@ -3497,21 +3582,51 @@ async function refreshLibraryUI(){
 
   items.forEach((it, idx)=>{
     const wrap = document.createElement("div");
-    wrap.style.marginBottom = "10px";
+    wrap.className = "libItem";
     wrap.dataset.libId = it.id || "";
     wrap.dataset.libPath = it.path || "";
+    wrap.dataset.libKey = getLibraryItemKey(it);
+    wrap.dataset.wasHidden = hiddenKeys.has(wrap.dataset.libKey) ? "1" : "";
+    let libItemLongPressTimer = 0;
+    let libItemLongPressed = false;
+
+    wrap.addEventListener("pointerdown", (e)=>{
+      libItemLongPressed = false;
+      clearTimeout(libItemLongPressTimer);
+      libItemLongPressTimer = setTimeout(()=>{
+        libItemLongPressed = true;
+        wrap.classList.toggle("lib-selected");
+        showHint(wrap.classList.contains("lib-selected") ? "selected for delete" : "unselected", 650);
+      }, 520);
+    });
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach(type=>{
+      wrap.addEventListener(type, ()=>{
+        clearTimeout(libItemLongPressTimer);
+      });
+    });
+
+    wrap.addEventListener("click", (e)=>{
+      if (libItemLongPressed) {
+        e.preventDefault();
+        return;
+      }
+      if (wrap.classList.contains("lib-selected")){
+        wrap.classList.remove("lib-selected");
+        return;
+      }
+      addStickerFromDataURL(it.image_url || it.dataURL, it.w, it.h);
+    });
+
+    wrap.addEventListener("dblclick", (e)=>{
+      e.preventDefault();
+      wrap.classList.toggle("lib-selected");
+    });
 
     const img = document.createElement("img");
     img.className = "thumb";
     img.src = it.image_url || it.dataURL;
     img.title = `#${idx+1}`;
-    img.addEventListener("click", ()=>{
-      if (libDeleteMode) {
-        wrap.classList.toggle("lib-selected");
-        return;
-      }
-      addStickerFromDataURL(it.image_url || it.dataURL, it.w, it.h);
-    });
 
     const meta = document.createElement("div");
     meta.className = "small";
@@ -3540,7 +3655,8 @@ function closeArchive(){
 }
 
 async function renderArchiveGrid(){
-  const items = await loadLibrary();
+  const allItems = await loadLibrary();
+  const items = libAdminDeleteMode ? allItems : visibleLibraryItems(allItems);
   archiveGrid.innerHTML = "";
 
   if (!items.length){
@@ -3603,10 +3719,30 @@ async function renderArchiveGrid(){
   });
 }
 
+    async function imageUrlToLocalDataURL(url){
+      if (String(url).startsWith("data:")) return url;
+
+      const res = await fetch(url, { mode: "cors", cache: "force-cache" });
+      if (!res.ok) throw new Error("image fetch failed");
+
+      const blob = await res.blob();
+      return await new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
     async function addStickerFromDataURL(dataURL, w, h){
+      const localDataURL = await imageUrlToLocalDataURL(dataURL).catch((err)=>{
+        console.warn("image localize failed, falling back to original url:", err);
+        return dataURL;
+      });
+
       const img = new Image();
-      if (!String(dataURL).startsWith("data:")) img.crossOrigin = "anonymous";
-      img.src = dataURL;
+      if (!String(localDataURL).startsWith("data:")) img.crossOrigin = "anonymous";
+      img.src = localDataURL;
       await img.decode().catch(()=>{});
 
       const rect = stage.getBoundingClientRect();
@@ -3622,8 +3758,15 @@ async function renderArchiveGrid(){
       const ctx = src.getContext("2d");
       ctx.drawImage(img, 0,0, src.width, src.height);
 
+      try{
+        ctx.getImageData(0, 0, 1, 1);
+      }catch(err){
+        console.warn("library sticker canvas is tainted; undo pixel edits may not work:", err);
+        showHint("Cannot prepare undo for this library image", 1200);
+      }
+
       addStickerFromCanvas(src, { x, y, w: targetW, h: targetH });
-      showHint("已放回", 900);
+      showHint("Placed back", 900);
     }
 
     function stickerToDataURL(st){
@@ -3635,7 +3778,7 @@ async function renderArchiveGrid(){
     document.getElementById("btnFlip").addEventListener("click", async ()=>{
       facingMode = (facingMode === "environment") ? "user" : "environment";
       await startCamera();
-      showHint(facingMode === "user" ? "前置（镜像）" : "后置", 700);
+      showHint(facingMode === "user" ? "Front (mirror)" : "Rear", 700);
     });
 
     const btnGravityOff = document.getElementById("btnGravityOff");
@@ -3651,7 +3794,7 @@ async function renderArchiveGrid(){
       if (!ok){
         shuffleMode = false;
         refreshPhysicsUI();
-        showHint("需要 Motion 权限才能摇一摇 Shuffle", 1200);
+        showHint("Motion permission required to shuffle", 1200);
         return;
       }
 
@@ -3682,7 +3825,7 @@ async function renderArchiveGrid(){
 
       gravityMode = true;
       refreshPhysicsUI();
-      showHint("Gravity ON：倾斜手机推动碎片", 1200);
+      showHint("Gravity ON：tilt phone to move pieces", 1200);
 
       startGravityLoop();
     }catch(e){
@@ -3728,10 +3871,10 @@ btnSave.addEventListener("click", async ()=>{
   if (!selected) return;
 
   try{
-    showHint("定位中…", 700);
+    showHint("Locating…", 700);
     const geo = await getGeoOnce();
 
-    showHint("上传中…", 700);
+    showHint("Uploading…", 700);
     await uploadStickerToSupabase(selected, geo);
 
     await refreshLibraryUI();
@@ -3743,7 +3886,7 @@ btnSave.addEventListener("click", async ()=>{
     else showHint("saved (no location)", 900);
   }catch(err){
     console.error(err);
-    showHint("保存失败", 1200);
+    showHint("Save failed", 1200);
   }
 });
 
@@ -3779,7 +3922,7 @@ btnSave.addEventListener("click", async ()=>{
     btnFxMosaic.addEventListener("click", ()=>{
       if (!selected) return;
       editMode = "mosaic";
-      showHint("Mosaic brush：拖动涂抹方块马赛克", 900);
+      showHint("Mosaic brush：drag to apply mosaic", 900);
     });
 
 
@@ -3955,31 +4098,36 @@ document.getElementById("btnLibClear").addEventListener("click", async ()=>{
   }
 });
 
-let libDeleteMode = false;
+const btnLibDelete = document.getElementById("btnLibDelete");
+let libAdminDeleteMode = false;
+let libAdminPressTimer = 0;
+let libAdminPressArmed = false;
+let lastLibAdminDeleteClickAt = 0;
+let pendingLibAdminDeleteTimer = 0;
 
-document.getElementById("btnLibDelete").addEventListener("click", async ()=>{
-  if (!libDeleteMode) {
-    libDeleteMode = true;
-    document.getElementById("btnLibDelete").textContent = "Confirm";
-    showHint("Tap items to select, then Confirm", 1200);
-    return;
+function setLibAdminDeleteMode(on){
+  libAdminDeleteMode = on;
+  lastLibAdminDeleteClickAt = 0;
+  clearTimeout(pendingLibAdminDeleteTimer);
+  btnLibDelete.textContent = on ? "ADMIN DELETE" : "Delete";
+  btnLibDelete.classList.toggle("primary", on);
+  refreshLibraryUI().catch(console.error);
+  if (archiveOverlay.style.display === "block"){
+    renderArchiveGrid().catch(console.error);
   }
+}
 
-  const selected = libList.querySelectorAll(".lib-selected");
-  if (!selected.length) {
-    libDeleteMode = false;
-    document.getElementById("btnLibDelete").textContent = "Delete";
-    showHint("No items selected", 800);
-    return;
-  }
-
+async function adminDeleteLibraryItems(selectedItems){
   try {
     const ids = [];
     const paths = [];
-    selected.forEach(wrap => {
+    const hidden = getHiddenLibraryKeys();
+    selectedItems.forEach(wrap => {
       if (wrap.dataset.libId) ids.push(wrap.dataset.libId);
       if (wrap.dataset.libPath) paths.push(wrap.dataset.libPath);
+      if (wrap.dataset.libKey) hidden.delete(wrap.dataset.libKey);
     });
+    saveHiddenLibraryKeys(hidden);
 
     if (paths.length) {
       await supabase.storage.from(BUCKET_NAME).remove(paths);
@@ -3988,15 +4136,72 @@ document.getElementById("btnLibDelete").addEventListener("click", async ()=>{
       await supabase.from("library_items").delete().in("id", ids);
     }
 
-    await refreshLibraryUI();
-    showHint(`Deleted ${selected.length} item(s)`, 900);
+    showHint(`ADMIN deleted ${selectedItems.length} item(s)`, 1000);
   } catch(err) {
     console.error(err);
-    showHint("Delete failed", 1200);
+    showHint("Admin delete failed", 1200);
+  }
+  setLibAdminDeleteMode(false);
+}
+
+btnLibDelete.addEventListener("pointerdown", (e)=>{
+  libAdminPressArmed = true;
+  clearTimeout(libAdminPressTimer);
+  libAdminPressTimer = setTimeout(()=>{
+    libAdminPressArmed = false;
+    setLibAdminDeleteMode(true);
+    showHint("ADMIN DELETE：after selection, click Delete to permanently delete from cloud", 1400);
+  }, 5000);
+});
+
+["pointerup", "pointercancel", "pointerleave"].forEach(type=>{
+  btnLibDelete.addEventListener(type, ()=>{
+    clearTimeout(libAdminPressTimer);
+  });
+});
+
+btnLibDelete.addEventListener("click", async (e)=>{
+  if (!libAdminPressArmed) {
+    e.preventDefault();
+    return;
   }
 
-  libDeleteMode = false;
-  document.getElementById("btnLibDelete").textContent = "Delete";
+  if (libAdminDeleteMode){
+    const now = performance.now();
+    if (now - lastLibAdminDeleteClickAt <= 420){
+      clearTimeout(pendingLibAdminDeleteTimer);
+      setLibAdminDeleteMode(false);
+      showHint("ADMIN DELETE OFF", 900);
+      return;
+    }
+    lastLibAdminDeleteClickAt = now;
+  }
+
+  const selected = Array.from(libList.querySelectorAll(".lib-selected"));
+  if (!selected.length) {
+    showHint("Select library item first", 1000);
+    return;
+  }
+
+  if (libAdminDeleteMode){
+    clearTimeout(pendingLibAdminDeleteTimer);
+    pendingLibAdminDeleteTimer = setTimeout(()=>{
+      adminDeleteLibraryItems(selected);
+    }, 320);
+    return;
+  }
+
+  const hidden = getHiddenLibraryKeys();
+  selected.forEach(wrap => {
+    if (wrap.dataset.libKey) hidden.add(wrap.dataset.libKey);
+  });
+
+  saveHiddenLibraryKeys(hidden);
+  await refreshLibraryUI();
+  if (archiveOverlay.style.display === "block"){
+    await renderArchiveGrid();
+  }
+  showHint(`Deleted ${selected.length} item(s) from this device`, 900);
 });
 
     btnDeleteSelected.addEventListener("click", ()=>{
@@ -4014,7 +4219,7 @@ document.getElementById("btnLibDelete").addEventListener("click", async ()=>{
       fieldDrawing = false;
       clearFieldOverlay();
 
-      showHint("已清空", 800);
+      showHint("Cleared", 800);
     });
 
     function syncGridVals(){
@@ -4041,7 +4246,7 @@ document.getElementById("btnGridDone").addEventListener("click", async ()=>{
   //    这样即使 Shuffle OFF，也能摇一摇触发 “只洗 grid”
   const ok = await ensureShakeReady();
   if (!ok){
-    showHint("未开启 Motion 权限：摇一摇无法洗牌（可在 Safari 设置里开启）", 1400);
+    showHint("Motion permission not enabled: cannot shake to shuffle (can enable in Safari settings)", 1400);
     // 不 return：grid 仍然照常生成，只是不能摇
   }
 
@@ -4442,9 +4647,9 @@ async function requestMotionPermissionIfNeeded(){
   if (typeof DME?.requestPermission === "function"){
     try{
       const res = await DME.requestPermission();
-      if (res !== "granted") showHint("Motion 权限未开启，无法摇一摇", 1200);
+      if (res !== "granted") showHint("Motion permission not enabled, cannot shake", 1200);
     }catch{
-      showHint("Motion 权限请求失败", 1000);
+      showHint("Motion permission request failed", 1000);
     }
   }
 }
