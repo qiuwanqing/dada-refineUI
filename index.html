@@ -12,7 +12,20 @@
   <style>
     :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
     body { margin:0; background:#0b0c10; color:#e8e8e8; overflow:hidden; }
-    html, body { height: 100%; }
+    html, body {
+      height: 100%;
+      touch-action: none;
+      -webkit-text-size-adjust: 100%;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    *, *::before, *::after {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
     button { font: inherit; }
 
    /* ---------------- Topbar 顶部按钮栏 ---------------- */
@@ -130,6 +143,7 @@
       overflow:hidden;
       touch-action:none;
       background:#000;
+      -webkit-user-select:none;
       user-select:none;
     }
      /* ---------------- 视频层 -------------------------- */
@@ -4645,6 +4659,17 @@ setupLibraryResize();
 window.addEventListener('resize', updateFloatingButtons);
 window.visualViewport?.addEventListener('resize', updateFloatingButtons);
 
+["gesturestart", "gesturechange", "gestureend"].forEach(type=>{
+  document.addEventListener(type, (e)=>e.preventDefault(), { passive:false });
+});
+
+["selectstart", "contextmenu", "dragstart"].forEach(type=>{
+  document.addEventListener(type, (e)=>{
+    if (e.target.closest("input, textarea")) return;
+    e.preventDefault();
+  }, { passive:false });
+});
+
 // ==============================双击 sticker 进入 edit ======
 // 单击仍然只负责选中/拖动；同一个 sticker 快速点两次才打开功能环。
 let stickerTapCandidate = null;
@@ -4684,6 +4709,13 @@ stage.addEventListener("pointerdown", (e) => {
         x: e.clientX,
         y: e.clientY
     };
+
+    const now = performance.now();
+    if (lastStickerTap.el === sticker && now - lastStickerTap.time <= STICKER_DOUBLE_TAP_MS) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    }
 }, true);
 
 stage.addEventListener("pointerup", (e) => {
@@ -4771,6 +4803,7 @@ function showFunctionCircle(initCx, initCy) {
     const centerImg = document.createElement("img");
     centerImg.src = "assets/round.png";
     centerImg.id  = "funcCircleCenter";
+    centerImg.draggable = false;
     centerImg.style.position = "absolute";
     centerImg.style.width  = "50px";
     centerImg.style.height = "50px";
