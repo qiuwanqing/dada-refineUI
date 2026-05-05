@@ -5102,12 +5102,12 @@ stage.addEventListener("pointerup", (e) => {
 // ======================== 功能环函数 ========================
 function showFunctionCircle(initCx, initCy) {
     const funcs = [
-        { name: "Distort", png: "distort.png", id: "distort" },
-        { name: "Blur",    png: "blur.png",    id: "blur"    },
-        { name: "B&W",     png: "bw.png",      id: "bw"      },
-        { name: "Noise",   png: "noise.png",   id: "noise"   },
-        { name: "Side",    png: "side.png",     id: "side"    },
-        { name: "Mosaic",  png: "mosaic.png",   id: "mosaic"  }
+        { name: "Distort", png: "distort.png", id: "distort", w: 40, r: 100 },
+        { name: "Blur",    png: "blur.png",    id: "blur",    w: 35, r: 105 },
+        { name: "B&W",     png: "bw.png",      id: "bw",      w: 40, r: 110 },
+        { name: "Noise",   png: "noise.png",   id: "noise",   w: 45, r: 110 },
+        { name: "Side",    png: "side.png",    id: "side",    w: 35, r: 105 },
+        { name: "Mosaic",  png: "mosaic.png",  id: "mosaic",  w: 45, r: 100 }
     ];
 
     const _existing = document.getElementById("funcCircleContainer");
@@ -5125,8 +5125,9 @@ function showFunctionCircle(initCx, initCy) {
 
     let ringCx = initCx;
     let ringCy = initCy;
-    let radiusPx = 80;
-    let centerRotation = 0; // Track center disc rotation
+    let radiusPx = 120;
+    const centerArtworkAngle = Math.PI; // round.png artwork points left at rest.
+    let centerRotation = centerArtworkAngle; // Track center disc math angle.
 
     function closeCircle() {
         document.removeEventListener("pointermove", onDocPointerMove);
@@ -5161,8 +5162,8 @@ function showFunctionCircle(initCx, initCy) {
     centerImg.id  = "funcCircleCenter";
     centerImg.draggable = false;
     centerImg.style.position = "absolute";
-    centerImg.style.width  = "50px";
-    centerImg.style.height = "50px";
+    centerImg.style.width  = "120px";
+    centerImg.style.height = "105px";
     centerImg.style.pointerEvents = "auto";
     centerImg.style.touchAction = "none";
     centerImg.style.transformOrigin = "center center";
@@ -5172,7 +5173,7 @@ function showFunctionCircle(initCx, initCy) {
     container.appendChild(centerImg);
 
     function updateCenterRotation() {
-        centerImg.style.transform = "translate(-50%, -50%) rotate(" + centerRotation + "rad)";
+        centerImg.style.transform = "translate(-50%, -50%) rotate(" + (centerRotation - centerArtworkAngle) + "rad)";
     }
 
     // function buttons
@@ -5193,7 +5194,7 @@ function showFunctionCircle(initCx, initCy) {
         const img = document.createElement("img");
         img.src = "assets/" + func.png;
         img.alt = func.name;
-        img.style.width = "45px";
+        img.style.width = (func.w || 45) + "px";
         img.style.height = "auto";
         img.draggable = false;
 
@@ -5211,18 +5212,19 @@ function showFunctionCircle(initCx, initCy) {
 
     // arc: 135 deg spread on the left side, centered at 180 deg (pointing left)
     const arcCenter = Math.PI;       // 180 deg = left
-    const arcSpread = (135 / 180) * Math.PI; // 135 deg total spread (67.5 deg each side)
+    const arcSpread = (95 / 180) * Math.PI; // 135 deg total spread (67.5 deg each side)
 
     function btnAngle(i) {
         const t = funcs.length > 1 ? i / (funcs.length - 1) : 0.5;
-        return arcCenter - arcSpread/2 + t * arcSpread;
+        return arcCenter + arcSpread/2 - t * arcSpread;
     }
 
     function updateButtons() {
         funcs.forEach((func, i) => {
             const angle = btnAngle(i);
-            const bx = ringCx + radiusPx * Math.cos(angle);
-            const by = ringCy + radiusPx * Math.sin(angle);
+            const r = func.r || radiusPx;
+            const bx = ringCx + r * Math.cos(angle);
+            const by = ringCy + r * Math.sin(angle);
             btnEls[i].style.left = bx + "px";
             btnEls[i].style.top  = by + "px";
             btnEls[i].style.transform = "translate(-50%, -50%)";
