@@ -1651,6 +1651,7 @@ blurBtn.addEventListener("click", () => {
 
     const LIB_KEY = "capture_library_v2";
     const LIB_HIDDEN_KEY = "capture_library_hidden_v1";
+    const PLACE_CACHE_KEY = "capture_place_cache_v1";
 
     const DEVICE_KEY = "capture_device_id_v1";
 
@@ -1729,6 +1730,64 @@ function saveHiddenLibraryKeys(keys){
 function visibleLibraryItems(items){
   const hidden = getHiddenLibraryKeys();
   return items.filter(it => !hidden.has(getLibraryItemKey(it)));
+}
+
+function readPlaceCache(){
+  try{
+    return JSON.parse(localStorage.getItem(PLACE_CACHE_KEY) || "{}");
+  }catch{
+    return {};
+  }
+}
+
+function writePlaceCache(cache){
+  localStorage.setItem(PLACE_CACHE_KEY, JSON.stringify(cache));
+}
+
+function placeCacheKey(lat, lng){
+  return `${Number(lat).toFixed(3)},${Number(lng).toFixed(3)}`;
+}
+
+async function reverseGeocodePlace(lat, lng){
+  if (lat == null || lng == null) return null;
+
+  const key = placeCacheKey(lat, lng);
+  const cache = readPlaceCache();
+  if (cache[key]) return cache[key];
+
+  const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&localityLanguage=en`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const place = [
+    data.city || data.locality || data.principalSubdivision,
+    data.countryName
+  ].filter(Boolean).join(", ");
+
+  if (!place) return null;
+  cache[key] = place;
+  writePlaceCache(cache);
+  return place;
+}
+
+function locationFallbackText(geo){
+  if (!geo?.lat) return "(no location)";
+  return `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}  +/-${Math.round(geo.accuracy_m || 0)}m`;
+}
+
+function fillPlaceText(el, geo){
+  if (!geo?.lat){
+    el.textContent = "(no location)";
+    return;
+  }
+
+  el.textContent = locationFallbackText(geo);
+  reverseGeocodePlace(geo.lat, geo.lng)
+    .then(place=>{
+      if (place) el.textContent = `${place}  +/-${Math.round(geo.accuracy_m || 0)}m`;
+    })
+    .catch(err=>console.warn("reverse geocode failed:", err));
 }
 
 async function uploadStickerToSupabase(st, geo = null){
@@ -1812,24 +1871,41 @@ async function clearLibraryFromSupabase(){
   }
 }
 
-    async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
-  return await new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(null);
+async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
+  if (!navigator.geolocation) return null;
 
+  const readPosition = (opts) => new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        accuracy_m: pos.coords.accuracy,
-        ts: pos.timestamp
+        geo: {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy_m: pos.coords.accuracy,
+          ts: pos.timestamp
+        },
+        err: null
       }),
-      (err) => {
-        console.warn("geolocation error:", err);
-        resolve(null);
-      },
-      { enableHighAccuracy: highAccuracy, timeout, maximumAge: 15000 }
+      (err) => resolve({ geo: null, err }),
+      opts
     );
   });
+
+  const first = await readPosition({
+    enableHighAccuracy: highAccuracy,
+    timeout,
+    maximumAge: 15000
+  });
+  if (first.geo) return first.geo;
+
+  const fallback = await readPosition({
+    enableHighAccuracy: false,
+    timeout: 9000,
+    maximumAge: 60000
+  });
+  if (fallback.geo) return fallback.geo;
+
+  console.warn("geolocation error:", fallback.err || first.err);
+  return null;
 }
 
 function setVh(){
@@ -3633,11 +3709,7 @@ async function refreshLibraryUI(){
     meta.style.opacity = "0.78";
     meta.style.marginTop = "4px";
 
-    if (it.geo?.lat != null){
-      meta.textContent = `${it.geo.lat.toFixed(5)}, ${it.geo.lng.toFixed(5)}  ±${Math.round(it.geo.accuracy_m || 0)}m`;
-    } else {
-      meta.textContent = `(no location)`;
-    }
+    fillPlaceText(meta, it.geo);
 
     wrap.appendChild(img);
     wrap.appendChild(meta);
@@ -3704,11 +3776,7 @@ async function renderArchiveGrid(){
     left.textContent = `#${idx+1}`;
 
     const right = document.createElement("span");
-    if (it.geo?.lat != null){
-      right.textContent = `±${Math.round(it.geo.accuracy_m || 0)}m`;
-    } else {
-      right.textContent = `no location`;
-    }
+    fillPlaceText(right, it.geo);
 
     meta.appendChild(left);
     meta.appendChild(right);
@@ -3882,7 +3950,10 @@ btnSave.addEventListener("click", async ()=>{
       await renderArchiveGrid();
     }
 
-    if (geo) showHint(`saved ✓  ±${Math.round(geo.accuracy_m)}m`, 1000);
+    if (geo) {
+      const place = await reverseGeocodePlace(geo.lat, geo.lng).catch(()=>null);
+      showHint(place ? `saved - ${place}` : `saved - +/-${Math.round(geo.accuracy_m)}m`, 1000);
+    }
     else showHint("saved (no location)", 900);
   }catch(err){
     console.error(err);
