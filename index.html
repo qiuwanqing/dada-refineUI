@@ -1773,7 +1773,11 @@ async function reverseGeocodePlace(lat, lng){
 
 function locationFallbackText(geo){
   if (!geo?.lat) return "(no location)";
-  return `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}  +/-${Math.round(geo.accuracy_m || 0)}m`;
+  return `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)} +/-${Math.round(geo.accuracy_m || 0)}m`;
+}
+
+function locationPlaceText(place, geo){
+  return place ? `${place} | ${locationFallbackText(geo)}` : locationFallbackText(geo);
 }
 
 function fillPlaceText(el, geo){
@@ -1785,7 +1789,7 @@ function fillPlaceText(el, geo){
   el.textContent = locationFallbackText(geo);
   reverseGeocodePlace(geo.lat, geo.lng)
     .then(place=>{
-      if (place) el.textContent = `${place}  +/-${Math.round(geo.accuracy_m || 0)}m`;
+      if (place) el.textContent = locationPlaceText(place, geo);
     })
     .catch(err=>console.warn("reverse geocode failed:", err));
 }
@@ -1874,6 +1878,21 @@ async function clearLibraryFromSupabase(){
 async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
   if (!navigator.geolocation) return null;
 
+  const geoErrorName = (err) => {
+    if (!err) return "UNKNOWN";
+    if (err.code === err.PERMISSION_DENIED || err.code === 1) return "PERMISSION_DENIED";
+    if (err.code === err.POSITION_UNAVAILABLE || err.code === 2) return "POSITION_UNAVAILABLE";
+    if (err.code === err.TIMEOUT || err.code === 3) return "TIMEOUT";
+    return `CODE_${err.code || "UNKNOWN"}`;
+  };
+
+  const logGeoError = (label, err) => {
+    console.warn(`${label}: ${geoErrorName(err)}`, {
+      code: err?.code,
+      message: err?.message
+    });
+  };
+
   const readPosition = (opts) => new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({
@@ -1896,6 +1915,11 @@ async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
     maximumAge: 15000
   });
   if (first.geo) return first.geo;
+  if (first.err?.code === 1) {
+    logGeoError("geolocation denied", first.err);
+    showHint("Location permission denied in Safari/iPad settings", 1600);
+    return null;
+  }
 
   const fallback = await readPosition({
     enableHighAccuracy: false,
@@ -1904,7 +1928,8 @@ async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
   });
   if (fallback.geo) return fallback.geo;
 
-  console.warn("geolocation error:", fallback.err || first.err);
+  logGeoError("geolocation error", fallback.err || first.err);
+  showHint(`Location unavailable: ${geoErrorName(fallback.err || first.err)}`, 1400);
   return null;
 }
 
@@ -3952,7 +3977,7 @@ btnSave.addEventListener("click", async ()=>{
 
     if (geo) {
       const place = await reverseGeocodePlace(geo.lat, geo.lng).catch(()=>null);
-      showHint(place ? `saved - ${place}` : `saved - +/-${Math.round(geo.accuracy_m)}m`, 1000);
+      showHint(`saved - ${locationPlaceText(place, geo)}`, 1300);
     }
     else showHint("saved (no location)", 900);
   }catch(err){
