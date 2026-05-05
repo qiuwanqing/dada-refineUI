@@ -1696,11 +1696,12 @@ async function loadLibrary(){
     w: Number(it.width) || 160,
     h: Number(it.height) || 120,
     t: new Date(it.created_at).getTime(),
-    geo: (it.lat != null && it.lng != null)
+        geo: (it.lat != null && it.lng != null)
       ? {
           lat: it.lat,
           lng: it.lng,
-          accuracy_m: it.accuracy_m
+          accuracy_m: it.accuracy_m,
+          source: Number(it.accuracy_m || 0) === 0 ? "ip" : "gps"
         }
       : null,
     device_id: it.device_id
@@ -1773,7 +1774,10 @@ async function reverseGeocodePlace(lat, lng){
 
 function locationFallbackText(geo){
   if (!geo?.lat) return "(no location)";
-  return `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)} +/-${Math.round(geo.accuracy_m || 0)}m`;
+  const accuracy = geo.source === "ip"
+    ? "approx"
+    : `+/-${Math.round(geo.accuracy_m || 0)}m`;
+  return `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)} ${accuracy}`;
 }
 
 function locationPlaceText(place, geo){
@@ -1876,7 +1880,37 @@ async function clearLibraryFromSupabase(){
 }
 
 async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
-  if (!navigator.geolocation) return null;
+  const ipGeoFallback = async () => {
+    try{
+      const res = await fetch("https://ipapi.co/json/");
+      if (!res.ok) throw new Error("ip geolocation fetch failed");
+
+      const data = await res.json();
+      const lat = Number(data.latitude);
+      const lng = Number(data.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+      const place = [data.city, data.country_name].filter(Boolean).join(", ");
+      if (place){
+        const cache = readPlaceCache();
+        cache[placeCacheKey(lat, lng)] = place;
+        writePlaceCache(cache);
+      }
+
+      return {
+        lat,
+        lng,
+        accuracy_m: 0,
+        ts: Date.now(),
+        source: "ip"
+      };
+    }catch(err){
+      console.warn("ip geolocation fallback failed:", err);
+      return null;
+    }
+  };
+
+  if (!navigator.geolocation) return await ipGeoFallback();
 
   const geoErrorName = (err) => {
     if (!err) return "UNKNOWN";
@@ -1900,7 +1934,8 @@ async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy_m: pos.coords.accuracy,
-          ts: pos.timestamp
+          ts: pos.timestamp,
+          source: "gps"
         },
         err: null
       }),
@@ -1917,8 +1952,8 @@ async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
   if (first.geo) return first.geo;
   if (first.err?.code === 1) {
     logGeoError("geolocation denied", first.err);
-    showHint("Location permission denied in Safari/iPad settings", 1600);
-    return null;
+    showHint("GPS denied, using approximate network location", 1600);
+    return await ipGeoFallback();
   }
 
   const fallback = await readPosition({
@@ -1929,8 +1964,8 @@ async function getGeoOnce({ highAccuracy = true, timeout = 6500 } = {}) {
   if (fallback.geo) return fallback.geo;
 
   logGeoError("geolocation error", fallback.err || first.err);
-  showHint(`Location unavailable: ${geoErrorName(fallback.err || first.err)}`, 1400);
-  return null;
+  showHint(`GPS unavailable: ${geoErrorName(fallback.err || first.err)}. Trying network location`, 1400);
+  return await ipGeoFallback();
 }
 
 function setVh(){
